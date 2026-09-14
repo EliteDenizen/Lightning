@@ -1,0 +1,13 @@
+prefix: "&8[&eLightning&8]"
+
+noPermission: "{prefix} &fDu hast keine Berechtigung dafuer."
+playerOnly: "{prefix} &fDieser Befehl kann nur von Spielern verwendet werden."
+consoleOnly: "{prefix} &fDieser Befehl kann nur von der Konsole verwendet werden."
+reloadSuccess: "{prefix} &fNeu laden abgeschlossen."
+reloadFailed: "{prefix} &fBeim Neuladen ist ein Fehler aufgetreten, sieh in der Konsole nach."
+
+cooldown: "{prefix} &fBitte warte &e{time}&f, bevor du das erneut verwendest."
+maxUsesReached: "{prefix} &fDu hast das Nutzungslimit fuer diesen Befehl erreicht."
+wrongWorld: "{prefix} &fDieser Befehl kann in dieser Welt nicht verwendet werden."
+
+unknownSubcommand: "{prefix} &fUnbekannter Unterbefehl."

@@ -1,0 +1,230 @@
+# These settings apply to every command by default.
+# Override them inside a command if needed.
+defaults:
+  cooldown:
+    bypassPermission: lightning.bypass
+
+
+commands:
+
+  ltn-discord:
+    aliases: [discord, disc]
+    description: "Shows the community Discord server"
+    override: true # Overrides another plugin if it already registered this command.
+    actions:
+      - message:
+          - ""
+          - "&#5865F2&lD I S C O R D"
+          - "&7Join the community for support and announcements."
+          - ""
+          - "&f&ndiscord.gg/servername"
+          - ""
+      - sound:
+          name: BLOCK_NOTE_BLOCK_CHIME
+          pitch: 1.3
+
+  ltn-vote:
+    aliases: [vote]
+    description: "Opens the voting page"
+    usage: "/vote"
+    logUsage: true # Records each use in logs/usage.log along with the timestamp.
+
+    cooldown:
+      duration: 12h # Supports values like 30s, 5m, 2h, and 2d.
+      message: "&7You already voted today, come back in &f{time}&7."
+
+    actions:
+      - message: "&avote.yourserver.net"
+      - randomMessage:
+          - "&7Thanks for voting!"
+          - "&7Every vote helps the server grow."
+          - "&7See you on the leaderboard."
+      - template: success
+      - sound: BLOCK_NOTE_BLOCK_PLING
+      - firework:
+          type: STAR
+          colors: ["#55FF55", "#FFFFFF"]
+          power: 1
+
+  # everyUses runs an action every Nth use.
+  # For example, reward players on the 5th use, then again on the 10th.
+  # {uses} starts at 1, so a player's first use is {uses} = 1.
+  ltn-vote-streak:
+    description: "Milestone rewards for repeated voting"
+
+    actions:
+      - title:
+          title: "&6&l5 VOTE STREAK"
+          subtitle: "&7Keep it up!"
+        conditions:
+          everyUses: 5
+      - sound:
+          name: UI_TOAST_CHALLENGE_COMPLETE
+        conditions:
+          everyUses: 5
+      - command:
+          console: "give {player} diamond 3"
+        conditions:
+          everyUses: 5
+
+      - title:
+          title: "&d&l10 VOTE STREAK"
+          subtitle: "&7That's dedication."
+        conditions:
+          everyUses: 10
+      - broadcast: "&d{player} &7just hit &d10 votes&7 in a row."
+        conditions:
+          everyUses: 10
+      - command:
+          console: "give {player} diamond_block 1"
+        conditions:
+          everyUses: 10
+
+  # uses.limit sets the maximum number of times this command can be used.
+  # Once the limit is reached, the message below is shown instead.
+  ltn-starter-kit:
+    playerOnly: true
+    description: "One time starter kit"
+
+    uses:
+      limit: 1
+      per: player
+      message: "&cYou already claimed the starter kit."
+
+    conditions:
+      gameMode: survival
+
+    actions:
+      - dialog:
+          title: "&a&lStarter Kit"
+          body: "&7Ready to claim your starter kit? This only works once."
+          buttons:
+            - label: "&aClaim it"
+              console: "give {player} iron_sword 1"
+            - label: "&cNot now"
+
+  ltn-redeem:
+    permission: server.redeem
+    permissionDefault: op
+    playerOnly: true
+    usage: "/redeem <code> [player]"
+
+    arguments:
+
+      - name: code
+        required: true
+        suggestions:
+          values: [starter, event2024, vip7day]
+        pattern:
+          regex: "^[a-zA-Z0-9]{4,16}$"
+          message: "&cCodes are 4-16 letters or numbers, no spaces or symbols."
+
+      - name: target
+        required: false
+        suggestions:
+          type: players
+
+    actions:
+      - message: "&fRedeemed code &e{arg1}&f."
+      - actionbar: "&aCode accepted"
+
+  ltn-lootbox:
+    permission: server.lootbox
+    playerOnly: true
+    description: "Opens a lootbox for a random reward"
+
+    cooldown:
+      duration: 24h
+      message: "&cAlready opened one today, back in &f{time}&c."
+
+    actions:
+      - sound: BLOCK_CHEST_OPEN
+      - particle:
+          type: PORTAL
+          count: 20
+      - delay: 1s
+
+      - chance:
+          percent: 5
+          actions:
+            - broadcast: "&6&l{player} &ewon the jackpot!"
+            - firework:
+                type: BURST
+                colors: ["#FFD700", "#FFFFFF"]
+                power: 1
+            - command:
+                console: "give {player} diamond 10"
+      - chance:
+          percent: 25
+          actions:
+            - command:
+                console: "give {player} gold_ingot 5"
+      - chance:
+          percent: 70
+          actions:
+            - command:
+                console: "give {player} iron_ingot 8"
+
+  # Top level conditions control whether the command can run at all.
+  # If any condition fails, none of the actions below will run.
+  ltn-report:
+    playerOnly: true
+    usage: "/report <player> <reason>"
+
+    arguments:
+      - name: target
+        required: true
+        suggestions:
+          type: players
+      - name: reason
+        required: true
+
+    cooldown:
+      duration: 5m
+
+    conditions:
+      arguments: ">=2"
+      message: "&cUsage: /report <player> <reason>"
+
+    actions:
+      - broadcast:
+          text: "&c[Report] &f{player} &7reported &f{arg1}&7: &f{args}"
+          permission: lightning.staff
+      - actionbar: "&aReport sent to staff"
+
+  ltn-hub:
+    playerOnly: true
+    worlds:
+      - world_nether
+      - world_the_end
+    worldDeniedMessage: "&cYou're already in the hub."
+    actions:
+      - bossbar:
+          title: "&bReturning to hub..."
+          color: BLUE
+          duration: 3s
+      - sound: ENTITY_ENDERMAN_TELEPORT
+      - delay: 1s
+      - command:
+          console: "server {player} hub"
+
+  # consoleOnly only allows the command to be run from the console.
+  ltn-broadcast:
+    consoleOnly: true
+    usage: "broadcast <message>"
+    arguments:
+      - name: message
+        required: true
+    actions:
+      - broadcast: "&e[Announcement] &f{args}"
+
+  # register: false keeps the command hidden from the root tab completion list.
+  # Players can still use it if they know the command.
+  ltn-secret:
+    register: false
+    permission: lightning.secret
+    actions:
+      - title:
+          title: "&5&lYou found it"
+          subtitle: "&7Nobody else can tab-complete this one"
+      - sound: ENTITY_ENDERMAN_TELEPORT

@@ -1,0 +1,13 @@
+prefix: "&8[&eLightning&8]"
+
+noPermission: "{prefix} &fVoce nao tem permissao para usar isso."
+playerOnly: "{prefix} &fEste comando so pode ser usado por jogadores."
+consoleOnly: "{prefix} &fEste comando so pode ser usado pelo console."
+reloadSuccess: "{prefix} &fRecarregamento concluido."
+reloadFailed: "{prefix} &fAlgo deu errado durante o recarregamento, verifique o console para mais detalhes."
+
+cooldown: "{prefix} &fAguarde &e{time} &fantes de usar isso novamente."
+maxUsesReached: "{prefix} &fVoce atingiu o limite de uso deste comando."
+wrongWorld: "{prefix} &fEste comando nao pode ser usado neste mundo."
+
+unknownSubcommand: "{prefix} &fSubcomando nao reconhecido."

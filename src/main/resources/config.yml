@@ -1,0 +1,32 @@
+# Core settings for Lightning. Custom commands go in commands/, hooks in
+# actions/, reusable actions in templates/.
+
+# Language file to load from lang/ directory.
+language: en_US
+
+# For debugging purposes. Options: INFO, WARN, DEBUG.
+debug: WARN
+
+# Whether hooks still fire after another plugin blocks a command.
+# This setting is experimental and may not work as expected.
+runOnCancelled: false
+
+# Checks for a newer release on startup.
+checkForUpdates: true
+
+# The "config helper": lets any plugin's messages use MiniMessage tags
+# (colors, gradients, rainbow, smallcaps, etc) just by starting the message
+# with this prefix. Add [actionbar] or [title] anywhere in the message to
+# redirect it there instead of chat entirely. Needs PacketEvents, which
+# Lightning pulls in on its own at startup, nothing extra to install.
+# Requires Paper 1.21.7 or newer (that's what dialogs need too).
+configHelper:
+  enabled: true
+  prefix: "$"
+
+# Commands and plugins Lightning ignores completely.
+ignore:
+  commands:
+    - "minecraft:me"
+  plugins:
+    - "Lightning"

@@ -1,0 +1,31 @@
+# Example template file.
+
+success:
+  actions:
+    - sound: ENTITY_PLAYER_LEVELUP
+    - actionbar: "&aDone!"
+
+success-big:
+  actions:
+    - sound: UI_TOAST_CHALLENGE_COMPLETE
+    - title:
+        title: "&a&l DONE"
+        subtitle: "&fCompleted."
+        stay: 50
+
+denied:
+  actions:
+    - sound: BLOCK_NOTE_BLOCK_BASS
+    - actionbar: "&cNot allowed."
+
+heal:
+  actions:
+    - potion: REGENERATION:5:1
+    - sound: ENTITY_PLAYER_LEVELUP
+    - actionbar: "&aHealed!"
+
+notify-staff:
+  actions:
+    - broadcast:
+        text: "&8[&eLightning&8] &7{player} used &f/{command}"
+        permission: lightning.admin
