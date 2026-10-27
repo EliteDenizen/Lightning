@@ -1,28 +1,22 @@
 name: Lightning
-version: ${project.version}
-main: dev.elitedenizen.lightning.Lightning
-api-version: "1.21"
-paper-plugin-loader: dev.elitedenizen.lightning.LightningPluginLoader
-description: Custom commands, plugin hooks, and MiniMessage formatting for any plugin's messages.
-authors:
-  - EliteDenizen
+version: '${version}'
+main: com.denizenmc.lightning.Lightning
+paper-plugin-loader: com.denizenmc.lightning.LightningLoader
+api-version: '1.21'
+folia-supported: true
+author: EliteDenizen
+website: https://denizenmc.com
+description: Go beyond simple formatting with universal message customization, reusable components, and fully configurable commands.
 softdepend:
   - PlaceholderAPI
-  - MiniPlaceholders
-
-commands:
-  lightning:
-    description: Lightning admin command.
-    usage: /lightning <reload|reset|debug>
-    permission: lightning.admin
-    aliases:
-      - lt
-      - ltn
 
 permissions:
   lightning.admin:
-    description: Access to all Lightning admin commands.
+    description: Grants access to all Lightning administrative commands.
     default: op
   lightning.bypass:
-    description: Bypass cooldowns and usage limits.
+    description: Bypasses cooldowns and execution limits for custom commands.
     default: false
+  lightning.trusted:
+    description: Exempts the player from Guard tag restrictions.
+    default: op

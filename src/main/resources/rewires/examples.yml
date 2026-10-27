@@ -1,0 +1,99 @@
+# Rewires
+# Documentation: https://hub.denizenmc.com/docs/lightning/rewires
+#
+# Rewires customize messages that cannot be edited through their original
+# configuration, including hardcoded plugin text and Minecraft's own messages.
+# Each entry defines an independent rule.
+
+# Rule types
+# Replace rules modify matching text while preserving the rest of the message.
+# Use these for partial changes to tab lists, menu titles, item lore, and holograms.
+#
+#   replace: Matches a literal string, ignoring capitalization.
+#   pattern: Matches a Java regular expression. {0} represents the full match;
+#            {1} and subsequent placeholders represent capture groups.
+#
+# All matching replace rules are applied in configuration order.
+#
+# Message rules replace the entire message. Rules are evaluated in configuration
+# order, and only the first matching rule is applied.
+#
+#   text:     Matches the entire message, ignoring colors and capitalization.
+#   contains: Matches a substring, ignoring colors and capitalization.
+#   regex:    Matches a Java regular expression. {0} represents the full match;
+#             {1} and subsequent placeholders represent capture groups.
+#   lang:     Matches a Minecraft translation key. {1} and subsequent
+#             placeholders represent the translation arguments.
+#
+# Both rule types support:
+#   to:       Replacement text. Sparks are supported.
+#   drop:     Set to true to suppress the matching text.
+#
+# Message rules also support Bolts and the {text} placeholder, which contains
+# the original message.
+#
+# Rules apply to chat by default. Use surfaces to target other message types,
+# such as [kicks], [tablist], [inventories], or [tablist, inventories].
+#
+# Use /lightning inspect to view the exact text sent to you.
+# Specify a surface, such as /lightning inspect tablist or
+# /lightning inspect items, to inspect other message types.
+
+# Examples
+#
+# The examples below are disabled. Remove the leading # characters to enable
+# a rule, then adjust its values to match your server.
+
+# Replace a server name in tab lists, menu titles, and scoreboards.
+# Preserves the rest of the original text.
+#
+# server-name:
+#   replace: "My Server"
+#   surfaces: [tablist, inventories, scoreboards]
+#   to: "<spark:name>"
+
+# Rename vanilla items using their translation keys.
+# Use /lightning inspect items to identify the relevant key.
+#
+# sand:
+#   lang: block.minecraft.sand
+#   surfaces: [items]
+#   to: "<gold>Desert Sand"
+
+# Reformat item lore while preserving the level number.
+#
+# item-levels:
+#   pattern: "Level (\\d+)"
+#   surfaces: [items]
+#   to: "<spark:soft>Level</spark> <spark:accent>{1}</spark>"
+
+# Customize Minecraft's unknown command message.
+#
+# unknown-command:
+#   lang: command.unknown.command
+#   to: "<spark:alert>That command doesn't exist.</spark> <spark:soft>Try /help</spark>"
+
+# Replace a permission error with an action bar message and sound.
+#
+# no-permission:
+#   contains: "you do not have permission"
+#   to: "<actionbar><spark:alert>You can't do that.</spark><sound:entity.villager.no>"
+
+# Customize a protection plugin's denial message while retaining the action.
+#
+# region-deny:
+#   regex: "Hey! Sorry, but you can't (.+) here\\."
+#   to: "<actionbar><red>You can't {1} here."
+
+# Customize the ban screen shown when a banned player attempts to reconnect.
+#
+# ban-screen:
+#   lang: multiplayer.disconnect.banned.reason
+#   surfaces: [kicks]
+#   to: "<spark:name><n><n><red>You are banned from this server.</red><n><gray>Reason: <white>{1}"
+
+# Suppress a message entirely.
+#
+# quiet-saves:
+#   text: "Saving the game (this may take a moment!)"
+#   drop: true

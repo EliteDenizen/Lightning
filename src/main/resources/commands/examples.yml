@@ -1,0 +1,160 @@
+# Custom Commands
+# Documentation: https://hub.denizenmc.com/docs/lightning/commands
+#
+# Define custom commands in YAML files inside the commands/ directory.
+# Each top-level key becomes a command with tab completion and argument
+# validation, including vanilla-style syntax highlighting in chat.
+#
+# Command options:
+#   enabled:     Disable a command without removing its configuration.
+#   description: Description displayed in command help.
+#   aliases:     Alternative names for the command.
+#   permission:  Permission required to use the command. Unauthorized players
+#                will not see it in command suggestions.
+#   sender:      Allowed sender: player, console, or any.
+#   cooldown:    Minimum time between uses, such as 30s, 5m, or 12h.
+#   limit:       Maximum number of uses within a configured period.
+#   usage:       Custom usage message displayed when arguments are invalid.
+#   arguments:   Arguments accepted by the command, in input order.
+#   messages:    Override default cooldown, limit, usage, players, and console
+#                messages for this command.
+#   subcommands: Define additional commands beneath the parent command.
+#   actions:     Actions executed in order when the command runs.
+#
+# Supported actions include messages, console, player, broadcast, wait, if,
+# chance, pick, and stop. Actions can be combined to create command workflows.
+#
+# Available values:
+#   {player}: The player who executed the command.
+#   {world}:  The player's current world.
+#   {uuid}:   The player's UUID.
+#   {name}:   The value supplied for an argument named name.
+#
+# Sparks, Bolts, and supported placeholders can be used in message actions.
+# Player supplied argument values are treated as plain text and are not
+# interpreted as Lightning tags, placeholders, or command selectors.
+#
+# Changes to existing commands apply after /lightning reload.
+# Adding commands or arguments requires a server restart so the command
+# registration and client command tree can be updated.
+#
+# The examples below demonstrate common command configurations.
+
+# Basic command with a message and sound.
+discord:
+  description: Get the Discord link
+  aliases: [dc]
+  actions:
+    - "<spark:prefix> Join us at <click:open_url:'https://discord.gg/example'><spark:accent><u>discord.gg/example</u></spark></click>"
+    - "<sound:block.note_block.chime>"
+
+# Display centered messages in chat.
+rules:
+  description: Read the server rules
+  actions:
+    - "<center><spark:name>"
+    - "<center><spark:soft>Be kind. No cheating. Have fun.</spark>"
+    - "<center><spark:dim>Breaking these rules may result in a ban.</spark>"
+
+# Parent commands can contain subcommands with their own settings and actions.
+# Subcommands inherit the parent's sender restrictions unless overridden.
+kit:
+  description: Claim a kit
+  sender: player
+  subcommands:
+    starter:
+      limit: 1
+      messages:
+        limit: "<spark:prefix> You have already claimed your starter kit."
+      actions:
+        - console: "give {player} stone_sword"
+        - console: "give {player} bread 16"
+        - "<title:'<spark:accent>Starter Kit':'<spark:soft>Good luck out there'>"
+
+    daily:
+      cooldown: 24h
+      actions:
+        - console: "give {player} diamond 2"
+        - "<spark:prefix> Here's your daily reward.<sound:entity.player.levelup>"
+        - chance: 5%
+          then:
+            - console: "give {player} netherite_ingot"
+            - broadcast: "<spark:prefix> <spark:accent>{player}</spark> found a netherite ingot in their daily kit!"
+
+    weekend:
+      limit:
+        amount: 3
+        reset: week
+      actions:
+        - console: "give {player} golden_apple"
+        - "<spark:prefix> Enjoy your weekend."
+
+# Define arguments in the order they are entered.
+# The text type consumes the remaining input and should be the final argument.
+# Arguments can use shorthand syntax: - argument_name: type.
+report:
+  description: Report a player to staff
+  sender: player
+  cooldown: 1m
+  arguments:
+    - target: player
+    - reason: text
+  actions:
+    - "<spark:prefix> Thanks, staff will look into it."
+    - broadcast: "<spark:alert>Report</spark> <spark:soft>{player} reported {target}:</spark> {reason}"
+      permission: server.staff
+
+# Choice arguments provide tab completion and reject values outside the options.
+# Use default to make an argument optional.
+difficulty:
+  description: View a difficulty mode
+  arguments:
+    - name: mode
+      type: choice
+      options: [easy, normal, hard]
+      default: normal
+  actions:
+    - if: "{mode} == hard"
+      then: "<red>Hard mode. Good luck."
+      else:
+        - if: "{mode} == normal"
+          then: "<yellow>Normal mode. A fair challenge."
+          else: "<green>Easy mode. Take it slow."
+
+# Conditional actions can stop execution when a requirement is not met.
+# The stop action prevents subsequent actions from running.
+pay:
+  description: Send coins to another player
+  sender: player
+  permission: server.pay
+  arguments:
+    - name: target
+      type: player
+    - name: amount
+      type: number
+      min: 1
+      max: 100000
+  actions:
+    - if: "%vault_eco_balance% < {amount}"
+      then:
+        - "<spark:alert>You don't have enough coins.</spark>"
+        - stop: true
+    - console: "eco take {player} {amount}"
+    - console: "eco give {target} {amount}"
+    - "<spark:prefix> Sent <spark:coins:{amount}> to {target}."
+
+# Select a random outcome with pick.
+# Each option can contain a single action or a sequence of actions.
+lootbox:
+  description: Open a mystery box
+  sender: player
+  cooldown: 1h
+  actions:
+    - "<spark:soft>Opening the box...</spark><sound:block.chest.open>"
+    - wait: 1s
+    - pick:
+        - - console: "give {player} diamond 3"
+          - "<spark:accent>Three diamonds!</spark>"
+        - - console: "give {player} gold_ingot 8"
+          - "<yellow>Eight gold ingots.</yellow>"
+        - - "<gray>Empty. Better luck next time.</gray>"

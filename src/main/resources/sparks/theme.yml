@@ -1,0 +1,35 @@
+# Sparks
+# Documentation: https://hub.denizenmc.com/docs/lightning/sparks
+#
+# Sparks are reusable text components defined in YAML files inside the sparks/
+# directory. Each key becomes available as <spark:name> in supported Lightning
+# messages, custom commands, Rewires, and other Sparks.
+#
+# All files and subdirectories are loaded automatically. Sparks can reference
+# other Sparks, allowing shared styles and components to be maintained centrally.
+
+# Shared color palette.
+# Define colors here and reference them throughout your configuration to keep
+# your server's visual style consistent and simplify future changes.
+
+# Applies the configured color to the enclosed text.
+# Example: <spark:accent>Highlighted text</spark>
+accent:
+  color: "#FFB347"
+
+main:
+  color: white
+
+soft:
+  color: gray
+
+dim:
+  color: dark_gray
+
+# Text styles can include bold, italic, underlined, strikethrough, and obfuscated.
+alert:
+  color: "#FF5C5C"
+  style: [bold]
+
+# Sparks can also contain formatted text and reference other Sparks.
+divider: "<spark:dim><st>                              </st></spark>"

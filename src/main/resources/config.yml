@@ -1,32 +1,109 @@
-# Core settings for Lightning. Custom commands go in commands/, hooks in
-# actions/, reusable actions in templates/.
+# Lightning
+# Documentation: https://hub.denizenmc.com/docs/lightning
+# Support: https://support.denizenmc.com
+#
+# Adds MiniMessage formatting, reusable text components, and custom actions
+# to messages sent by other plugins without requiring changes to those plugins.
 
-# Language file to load from lang/ directory.
-language: en_US
+# Message detection mode.
+# smart: Process messages containing recognized Lightning tags.
+# marker: Process only messages containing the <charge> marker.
+detect: smart
 
-# For debugging purposes. Options: INFO, WARN, DEBUG.
-debug: WARN
+# Enable or disable individual message surfaces.
+# Disabled surfaces are not processed by Lightning.
+surfaces:
+  chat: true
+  actionbar: true
+  titles: true
+  bossbars: true
+  tablist: true
+  scoreboards: true
+  inventories: true
 
-# Whether hooks still fire after another plugin blocks a command.
-# This setting is experimental and may not work as expected.
-runOnCancelled: false
+  # Process item names and lore. Players in creative mode are skipped, since
+  # their client can send items back to the server with the formatting attached.
+  items: false
 
-# Checks for a newer release on startup.
-checkForUpdates: true
+  # Entity names, holograms, and text displays.
+  entities: true
 
-# The "config helper": lets any plugin's messages use MiniMessage tags
-# (colors, gradients, rainbow, smallcaps, etc) just by starting the message
-# with this prefix. Add [actionbar] or [title] anywhere in the message to
-# redirect it there instead of chat entirely. Needs PacketEvents, which
-# Lightning pulls in on its own at startup, nothing extra to install.
-# Requires Paper 1.21.7 or newer (that's what dialogs need too).
-configHelper:
-  enabled: true
-  prefix: "$"
+  # Kick messages and login screens, including ban, whitelist, and full server messages.
+  kicks: true
 
-# Commands and plugins Lightning ignores completely.
-ignore:
-  commands:
-    - "minecraft:me"
-  plugins:
-    - "Lightning"
+  # Server list description (MOTD).
+  motd: true
+
+  # Process plugin dialogs. Requires Minecraft 1.21.6 or newer.
+  dialogs: true
+
+# Resolve %placeholder% values using PlaceholderAPI.
+# Requires PlaceholderAPI to be installed.
+placeholders: true
+
+# Duration that Guard retains player input from chat, commands, and signs
+# to prevent user supplied text from being interpreted as Lightning formatting.
+# Players with lightning.trusted bypass Guard.
+# Set to 0 to disable.
+guard: 10m
+
+# Refresh interval for dynamic messages that would otherwise remain unchanged.
+# Useful for clocks and rotating content. Set to 0 to disable.
+pulse: 1s
+
+# Center point of the chat box in pixels, used by the <center> tag.
+center: 154
+
+# Time zone used by the <clock> tag.
+# Accepts standard time zone identifiers or "server" for the system time zone.
+timezone: server
+
+# Maximum number of processed message entries retained in the cache.
+cache: 4096
+
+items:
+  # Preserve Minecraft's default italics on renamed items.
+  italics: false
+
+faces:
+  # Fallback text displayed when player faces are unavailable.
+  fallback: "<gray>☺</gray>"
+
+  # Enable text shadows on player faces.
+  shadow: false
+
+# Log additional details about messages skipped by Lightning.
+# Can also be toggled with /lightning debug without reloading.
+debug: false
+
+# Messages displayed by Lightning commands.
+# All entries support MiniMessage formatting.
+# <prefix> inserts the configured prefix. Other placeholders are resolved
+# by Lightning where applicable.
+messages:
+  prefix: "<gradient:#FFE259:#FFA751><bold>Lightning</bold></gradient> <#5c5c5c>»</#5c5c5c>"
+  denied: "<prefix> You do not have permission to use this command."
+  reloaded: "<prefix> Configuration reloaded. Loaded <#ffd36e><sparks></#ffd36e> Sparks, <#ffd36e><rewires></#ffd36e> Rewires, and <#ffd36e><commands></#ffd36e> commands."
+  help: "<prefix> Available commands: <#ffd36e>/lightning</#ffd36e> reload, parse, sparks, inspect, check, convert, debug"
+  usage: "<prefix> Usage: <#ffd36e><usage></#ffd36e>"
+  untouched: "<prefix> No supported Lightning tags were found in that text."
+  sparks: "<prefix> Registered <#ffd36e><count></#ffd36e> Sparks: <names>"
+  inspecting: "<prefix> Inspecting <#ffd36e><surface></#ffd36e>. Hover over a <yellow>⚡</yellow> marker to view the message source."
+  stopped: "<prefix> Stopped inspecting <#ffd36e><surface></#ffd36e>."
+  players: "<prefix> This command can only be used by a player."
+  console: "<prefix> This command can only be used from the console."
+  cooldown: "<prefix> Please wait <#ffd36e><time></#ffd36e> before using this command again."
+  limit: "<prefix> You have reached the usage limit for this command."
+  offline: "<prefix> <#ffd36e><name></#ffd36e> is not currently online."
+  choice: "<prefix> Choose one of the following: <#ffd36e><choices></#ffd36e>."
+  debugging: "<prefix> Debug mode enabled. Detailed output will be sent to the console until the next reload."
+  quiet: "<prefix> Debug mode disabled."
+  checking: "<prefix> Scanning plugin configurations. Please wait..."
+  checked: "<prefix> Scanned <#ffd36e><files></#ffd36e> files and found <#ffd36e><found></#ffd36e> potential issues. Click an entry to copy its location."
+  more: "<prefix> Additional results are available in plugins/Lightning/check.txt (<#ffd36e><count></#ffd36e> remaining)."
+  missing: "<prefix> The plugin directory <#ffd36e><name></#ffd36e> could not be found."
+  clean: "<prefix> No legacy & color codes found in <#ffd36e><name></#ffd36e>."
+  preview: "<prefix> Found <#ffd36e><lines></#ffd36e> lines containing legacy & color codes in <#ffd36e><name></#ffd36e>."
+  converted: "<prefix> Converted <#ffd36e><name></#ffd36e> successfully. Original files have been backed up to plugins/Lightning/backups."
+  examples: "<#ffd36e>[View Examples]</#ffd36e>"
+  apply: "<green>[Convert]</green>"

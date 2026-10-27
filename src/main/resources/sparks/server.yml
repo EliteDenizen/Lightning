@@ -1,0 +1,73 @@
+# Sparks
+# Documentation: https://hub.denizenmc.com/docs/lightning/sparks
+#
+# Define reusable text components for your server. Sparks can reference other
+# Sparks, allowing you to build complex messages from smaller components.
+
+# Server name with gradient formatting.
+name: "<gradient:#FFE259:#FFA751><bold>Stormcraft</bold></gradient>"
+
+# Standard server prefix.
+prefix: "<spark:name> <spark:dim>»</spark>"
+
+# Clickable link to your server store.
+store: "<click:open_url:'https://store.example.com'><spark:accent>store.example.com</spark></click>"
+
+# Format a supplied value using {0}.
+# Example: <spark:coins:250> displays "250 ⛁".
+# Values can include PlaceholderAPI placeholders.
+coins: "<yellow>{0} ⛁</yellow>"
+
+# Calculate a value and format the result.
+# Supports +, -, *, /, %, ^, and parentheses.
+# Example: <spark:sale:100> calculates 100 * 0.8 and displays 80.00.
+sale:
+  formula: "{0} * 0.8"
+  format: "#,##0.00"
+
+# Resolve a placeholder and display the result in compact notation.
+# Example: 1520000 becomes 1.5M.
+balance:
+  formula: "%vault_eco_balance%"
+  format: compact
+
+# Convert playtime from ticks to seconds, then format as a duration.
+# Minecraft uses 20 ticks per second.
+playtime:
+  formula: "%statistic_time_played% / 20"
+  format: duration
+
+# Calculate health as a percentage, assuming 20 maximum health points.
+health-percent:
+  formula: "%player_health% / 20 * 100"
+  format: "0"
+
+# Format ping according to configurable thresholds.
+# Steps are evaluated from top to bottom. The first matching threshold is used.
+# {value} represents the evaluated number.
+ping:
+  scale: "%player_ping%"
+  format: "0"
+  steps:
+    - below: 60
+      text: "<green>{value}ms"
+    - below: 150
+      text: "<yellow>{value}ms"
+  else: "<red>{value}ms"
+
+# Rotate through messages at the specified interval.
+# Pulse refreshes supported messages even when the original plugin does not
+# resend them, making cycles suitable for tab lists and scoreboards.
+tips:
+  cycle:
+    - "<spark:soft>Vote daily with <spark:accent>/vote</spark>"
+    - "<spark:soft>Grab ranks at <spark:store></spark>"
+    - "<spark:soft>Lost? Try <spark:accent>/spawn</spark>"
+  every: 5s
+
+# Select a random entry whenever the Spark is evaluated.
+greeting:
+  pick:
+    - "Welcome back"
+    - "Good to see you"
+    - "Hey there"
