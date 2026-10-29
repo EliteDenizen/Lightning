@@ -121,6 +121,9 @@ Need help, found a bug, or have a feature request?
 
 - [Documentation](https://hub.denizenmc.com/docs/lightning)
 - [Support Discord](https://support.denizenmc.com)
+- [Report a bug or request a feature](https://github.com/EliteDenizen/Lightning/issues/new/choose)
+
+Want to help out? Read the [contributing guide](CONTRIBUTING.md). If Lightning has made your server better, you can also [support it on Ko-fi](https://ko-fi.com/elitedenizen).
 
 ## License
 

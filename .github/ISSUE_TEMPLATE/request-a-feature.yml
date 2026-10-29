@@ -1,0 +1,38 @@
+name: Request a feature
+description: Suggest something new for Lightning.
+labels: ['type: enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Got an idea? We'd love to hear it. A few tips before you write it up:
+
+        1. **Keep it to one idea per issue.** Separate requests are easier to discuss and track.
+        2. **Check that it isn't already there.** Search the [existing requests](https://github.com/EliteDenizen/Lightning/issues?q=is%3Aissue+label%3A%22type%3A+enhancement%22) and the [changelog](https://modrinth.com/plugin/BzegqUOE/changelog). It may also be possible today with a spark, bolt or rewire, so the [documentation](https://hub.denizenmc.com/docs/lightning) is worth a look.
+        3. **Ask whether it fits Lightning.** Lightning is about making text look and behave the way you want. Ideas that belong in a chat, economy or permissions plugin are usually better suited there.
+
+  - type: textarea
+    attributes:
+      label: Feature description
+      description: What would you like Lightning to do?
+      placeholder: "Example: A `<typewriter>` bolt that reveals an action bar message one letter at a time."
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Why it's useful
+      description: How would this help players, server owners or developers? A real example from your server goes a long way.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: How it could look
+      description: Optional. A sketch of the config, tag or command you have in mind.
+      render: yaml
+
+  - type: textarea
+    attributes:
+      label: Alternatives you've tried
+      description: Optional. Workarounds or other plugins you've used, and where they fall short.

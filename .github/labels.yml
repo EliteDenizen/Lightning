@@ -1,0 +1,132 @@
+# Issue and pull request labels, kept in sync by .github/workflows/labels.yml.
+# Edit this file to add or change a label. Aliases rename GitHub's default labels in place,
+# so anything already tagged with them keeps its label.
+
+# Bugs
+
+- name: "bug: unconfirmed"
+  color: "f9d0c4"
+  description: "Possible bug that still needs to be reproduced."
+  aliases: ["bug"]
+
+- name: "bug: confirmed"
+  color: "fc2929"
+  description: "Reproduced and confirmed as a bug in Lightning."
+
+- name: "bug: upstream"
+  color: "eb6420"
+  description: "Caused by Paper, PacketEvents, Minecraft or another plugin."
+
+# Types
+
+- name: "type: enhancement"
+  color: "1d76db"
+  description: "New features and feature requests."
+  aliases: ["enhancement"]
+
+- name: "type: bugfix"
+  color: "30e545"
+  description: "Pull requests that fix a bug."
+
+- name: "type: compatibility"
+  color: "5319e7"
+  description: "Making Lightning work alongside another plugin or server version."
+
+- name: "type: problem"
+  color: "d93f0b"
+  description: "Something that isn't strictly a bug but still gets in the way."
+
+- name: "type: question"
+  color: "006b75"
+  description: "Questions about using Lightning."
+  aliases: ["question"]
+
+- name: "type: documentation"
+  color: "0075ca"
+  description: "Improvements to the README, guides or examples."
+  aliases: ["documentation"]
+
+- name: "type: discussion"
+  color: "c7e86f"
+  description: "A larger change that needs talking through first."
+
+# Areas
+
+- name: "area: surfaces"
+  color: "fef2c0"
+  description: "Chat, action bars, titles, tab list, scoreboards, menus, items and other places text appears."
+
+- name: "area: sparks"
+  color: "fff3a3"
+  description: "Reusable text components."
+
+- name: "area: bolts"
+  color: "ffe259"
+  description: "Message actions like action bars, titles, sounds and suppression."
+
+- name: "area: rewires"
+  color: "ffd36b"
+  description: "Overriding existing plugin and vanilla messages."
+
+- name: "area: commands"
+  color: "ffa751"
+  description: "Custom commands and the /lightning tools."
+
+- name: "area: guard"
+  color: "b60205"
+  description: "Keeping player input as plain text."
+
+- name: "area: packets"
+  color: "c5def5"
+  description: "PacketEvents, protocol changes and connection issues."
+
+- name: "area: folia"
+  color: "bfd4f2"
+  description: "Behaviour specific to Folia."
+
+# Status
+
+- name: "status: not enough info"
+  color: "fbca04"
+  description: "Needs more information from the author before it can move forward."
+
+- name: "status: waiting on author"
+  color: "fbca04"
+  description: "Pull requests that need changes from the author before merging."
+
+- name: "status: open to PR"
+  color: "e100ff"
+  description: "Approved and open for anyone to contribute."
+  aliases: ["help wanted"]
+
+- name: "status: good first issue"
+  color: "7057ff"
+  description: "A friendly place to start contributing."
+  aliases: ["good first issue"]
+
+- name: "status: ready"
+  color: "ededed"
+  description: "Reviewed and ready to merge."
+
+- name: "status: duplicate"
+  color: "e6e6e6"
+  description: "Already reported in another issue."
+  aliases: ["duplicate"]
+
+- name: "status: works as intended"
+  color: "e6e6e6"
+  description: "Not a bug. Lightning is behaving as designed."
+
+- name: "status: invalid"
+  color: "e6e6e6"
+  description: "Not a valid issue."
+  aliases: ["invalid"]
+
+- name: "status: wontfix"
+  color: "ffffff"
+  description: "Won't be changed, for one reason or another."
+  aliases: ["wontfix"]
+
+- name: "status: spam"
+  color: "f42543"
+  description: "Spam."

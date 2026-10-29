@@ -1,0 +1,143 @@
+name: Report a bug
+description: Something in Lightning doesn't work the way it should.
+labels: ['bug: unconfirmed']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. The more we know, the faster it gets fixed.
+
+        Please only use this form if you can reproduce the problem. For setup help, the [documentation](https://hub.denizenmc.com/docs/lightning) and the [Support Discord](https://support.denizenmc.com) are the quickest way to an answer.
+
+  - type: checkboxes
+    attributes:
+      label: Before you start
+      options:
+        - label: I am running the latest version of Lightning.
+          required: true
+        - label: I searched the existing issues and this hasn't been reported yet.
+          required: true
+
+  - type: dropdown
+    attributes:
+      label: Type of bug
+      description: Choose all that apply.
+      multiple: true
+      options:
+        - Message looks wrong or isn't formatted
+        - Message is formatted when it shouldn't be
+        - Error in console
+        - Players can't connect or get kicked
+        - Performance issue or memory leak
+        - Compatibility issue with another plugin
+        - Exploit or Guard bypass
+        - Other unexpected behaviour
+    validations:
+      required: true
+
+  - type: dropdown
+    attributes:
+      label: Where does it happen?
+      description: The surface or feature involved. Choose all that apply.
+      multiple: true
+      options:
+        - Chat
+        - Action bar
+        - Titles
+        - Boss bars
+        - Tab list
+        - Scoreboard
+        - Menus or items
+        - Holograms or entities
+        - Dialogs
+        - Kick, ban or server list screens
+        - Sparks
+        - Bolts
+        - Rewires
+        - Custom commands
+        - "/lightning commands (parse, inspect, check, convert, debug)"
+        - Startup or reload
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Lightning version
+      description: Run `/version Lightning` and paste the result.
+      placeholder: "Example: 0.2.2"
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Server version
+      description: Run `/version` and paste the result.
+      placeholder: "Example: This server is running Paper version 1.21.10-113"
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: PacketEvents version
+      description: Run `/version packetevents`. If you didn't install it yourself, Lightning downloads it for you, so say "auto-downloaded".
+      placeholder: "Example: 2.14.0, or auto-downloaded"
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Bug description
+      description: Tell us roughly what's going wrong.
+      placeholder: |
+        Example: "Gradients from EssentialsX's /msg show up as raw tags in chat instead of colors."
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: The shortest way to make the bug happen on a fresh server.
+      placeholder: |
+        1. Install Lightning and EssentialsX
+        2. Set `msgFormat` in EssentialsX's messages to `<gradient:#FFE259:#FFA751>{0}</gradient>`
+        3. Run `/msg <player> hello`
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Expected behaviour
+      description: What should happen?
+      placeholder: "The message arrives with the gradient applied."
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Actual behaviour
+      description: What happens instead?
+      placeholder: "The tags are shown as plain text."
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Relevant configuration
+      description: |
+        The spark, bolt, rewire, command or plugin message involved. Trim it down to just the part that matters.
+        This is shown as YAML automatically, so there's no need for backticks.
+      render: yaml
+
+  - type: input
+    attributes:
+      label: Console log
+      description: |
+        If there's an error, or you turned on `/lightning debug`, upload the relevant part of your log to [mclo.gs](https://mclo.gs) or [pastes.dev](https://pastes.dev) and paste the link here.
+      placeholder: "Example: https://mclo.gs/abc1234"
+
+  - type: textarea
+    attributes:
+      label: Additional information
+      description: |
+        Screenshots, videos, a spark profiler link, or anything else that helps. If other plugins are involved, list them and their versions here.

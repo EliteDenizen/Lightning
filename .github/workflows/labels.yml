@@ -1,0 +1,22 @@
+name: Sync labels
+
+# Keeps the repository's labels matching .github/labels.yml.
+on:
+  push:
+    branches: [master]
+    paths: [.github/labels.yml]
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EndBug/label-sync@v2
+        with:
+          config-file: .github/labels.yml
+          # Labels missing from the file are left alone rather than deleted.
+          delete-other-labels: false

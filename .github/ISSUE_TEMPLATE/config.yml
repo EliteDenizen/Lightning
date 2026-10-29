@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Read the documentation
+    url: https://hub.denizenmc.com/docs/lightning
+    about: Most setup questions about sparks, bolts, rewires and commands are answered here.
+  - name: Check existing feature requests
+    url: https://github.com/EliteDenizen/Lightning/issues?q=is%3Aissue+label%3A%22type%3A+enhancement%22
+    about: See what has already been suggested, and add your thoughts to an existing request.
+  - name: Get help on Discord
+    url: https://support.denizenmc.com
+    about: For setup help and general questions. The issue tracker is kept for bugs and feature requests.
+  - name: Support Lightning on Ko-fi
+    url: https://ko-fi.com/elitedenizen
+    about: Lightning is free and always will be. If it helps your server, a coffee keeps it moving.
