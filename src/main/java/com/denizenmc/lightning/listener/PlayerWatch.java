@@ -2,6 +2,7 @@ package com.denizenmc.lightning.listener;
 
 import com.denizenmc.lightning.Lightning;
 import com.denizenmc.lightning.charge.Charged;
+import com.denizenmc.lightning.charge.Charger;
 import com.denizenmc.lightning.charge.Surface;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
@@ -12,6 +13,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerLocaleChangeEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.server.ServerListPingEvent;
@@ -66,6 +68,15 @@ public final class PlayerWatch implements Listener {
     @EventHandler
     public void onLocale(@NotNull final PlayerLocaleChangeEvent event) {
         plugin.charger().forget();
+    }
+
+    // Charging the kick reason here, rather than only in the packet, means the server logs the finished
+    // message too. The result is marked so the packet listener does not charge it a second time.
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onKick(@NotNull final PlayerKickEvent event) {
+        if (!plugin.settings().reaches(Surface.KICKS)) return;
+        Charged charged = plugin.charger().charge(event.reason(), event.getPlayer(), Surface.KICKS);
+        if (charged != null) event.reason(Charger.own(charged.component()));
     }
 
     @EventHandler

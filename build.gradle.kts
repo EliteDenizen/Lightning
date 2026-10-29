@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.denizenmc"
-version = "0.2.2-alpha.1"
+version = "0.2.2-alpha.2"
 description = "Go beyond simple formatting with universal message customization, reusable components, and fully configurable commands."
 
 java {

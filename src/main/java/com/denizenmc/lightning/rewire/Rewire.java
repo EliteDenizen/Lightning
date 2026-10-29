@@ -43,7 +43,7 @@ record Rewire(@NotNull String name, @NotNull Kind kind, @NotNull String pattern,
                 return plain.toLowerCase(Locale.ROOT).contains(pattern) ? List.of(escape(plain)) : null;
             }
             case REGEX -> {
-                Matcher matcher = regex.matcher(plain);
+                Matcher matcher = regex.matcher(new Bounded(plain));
                 if (!matcher.find()) return null;
                 List<String> values = new ArrayList<>(matcher.groupCount() + 1);
                 for (int group = 0; group <= matcher.groupCount(); group++) {
@@ -61,7 +61,7 @@ record Rewire(@NotNull String name, @NotNull Kind kind, @NotNull String pattern,
     // Extracts translation arguments from a plain English message for use as {1}, {2}, and subsequent values.
     @Nullable List<String> translated(@NotNull final String plain) {
         if (regex == null) return null;
-        Matcher matcher = regex.matcher(plain);
+        Matcher matcher = regex.matcher(new Bounded(plain));
         if (!matcher.find()) return null;
         List<String> values = new ArrayList<>(arity + 1);
         values.add(escape(matcher.group()));

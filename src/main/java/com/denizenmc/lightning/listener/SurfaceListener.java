@@ -94,7 +94,7 @@ public final class SurfaceListener extends PacketListenerAbstract {
                     || type == PacketType.Configuration.Server.DISCONNECT) {
                 if (reaches(Surface.KICKS)) kick(event, viewer);
             } else if (type == PacketType.Play.Server.SHOW_DIALOG) dialog(event, viewer);
-        } catch (RuntimeException e) {
+        } catch (RuntimeException | StackOverflowError | LinkageError e) {
             plugin.debug("Skipped a " + type + " packet: " + e.getMessage());
         }
     }

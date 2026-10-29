@@ -203,11 +203,13 @@ public final class Charger {
     }
 
     private Outcome work(final Component input, final Player viewer, final Surface surface) {
-        Rewires.Match rewired = plugin.rewires().match(input, surface);
+        Rewires.Match rewired = plugin.rewires().match(input, surface, viewer);
 
         if (rewired != null) {
             if (rewired.drop()) return new Outcome(Charged.dropped(), true);
-            return parse(rewired.text(), viewer, surface, placeholders && rewired.placeholders());
+            // Placeholders were already resolved for this viewer, so the result must not be shared with others.
+            Outcome outcome = parse(rewired.text(), viewer, surface, false);
+            return rewired.placeholders() ? new Outcome(outcome.charged(), false) : outcome;
         }
 
         // Apply replacement and pattern rules before processing the resulting component's tags.
@@ -226,7 +228,11 @@ public final class Charger {
         if (!Sense.worthLooking(input, placeholders)) return new Outcome(null, true);
 
         Settings settings = plugin.settings();
-        Stash stash = Stash.of(input);
+        // Some plugins send text as many small pieces that share the same style, which can split a tag
+        // like <spark:ess.text> across pieces. Merging identical neighbours first keeps such tags whole.
+        // Added this patch after encountering an issue in a plugin that split a single line into
+        // 20+ components, all sharing the same style.
+        Stash stash = Stash.of(input.compact());
         String serialized = MINI.serialize(stash.component());
 
         if (settings.markerOnly() && !serialized.contains("\\<charge>")) {
@@ -268,7 +274,7 @@ public final class Charger {
         Component output = charged.component();
         if (!Sense.worthLooking(output, false)) return first;
 
-        Stash stash = Stash.of(output);
+        Stash stash = Stash.of(output.compact());
         String serialized = MINI.serialize(stash.component());
 
         if (!Sense.hasWrittenTag(serialized, surface.safe() ? safe : full)) return first;

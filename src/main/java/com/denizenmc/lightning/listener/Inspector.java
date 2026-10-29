@@ -83,7 +83,7 @@ public final class Inspector {
     @NotNull Component report(@NotNull final Component original, @Nullable final Charged charged, @NotNull final Surface surface) {
         String plain = PLAIN.serialize(original);
         List<String> keys = keys(original, new ArrayList<>());
-        Rewires.Match rewire = plugin.rewires().match(original, surface);
+        Rewires.Match rewire = plugin.rewires().match(original, surface, null);
 
         TextComponent details = Component.text()
                 .append(row("Surface", surface.key())).append(Component.newline())

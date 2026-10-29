@@ -3,6 +3,7 @@ package com.denizenmc.lightning.rewire;
 import com.denizenmc.lightning.Lightning;
 import com.denizenmc.lightning.Yaml;
 import com.denizenmc.lightning.charge.Surface;
+import com.denizenmc.lightning.charge.Placeholders;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextReplacementConfig;
 import org.bukkit.entity.Player;
@@ -53,7 +54,7 @@ public final class Rewires {
         return size;
     }
 
-    public @Nullable Match match(@NotNull final Component input, @NotNull final Surface surface) {
+    public @Nullable Match match(@NotNull final Component input, @NotNull final Surface surface, @Nullable final Player viewer) {
         List<Rewire> candidates = rules.get(surface);
         if (candidates == null) return null;
 
@@ -62,22 +63,32 @@ public final class Rewires {
         for (Rewire rule : candidates) {
             if (rule.partial()) continue;
             List<String> values;
-            if (rule.kind() == Rewire.Kind.LANG) {
-                if (translations == null) translations = translations(input, new ArrayList<>());
-                values = arguments(translations, rule.pattern());
-                // Some messages, such as ban screens, arrive as plain English instead of translation components.
-                if (values == null && rule.regex() != null) {
+            try {
+                if (rule.kind() == Rewire.Kind.LANG) {
+                    if (translations == null) translations = translations(input, new ArrayList<>());
+                    values = arguments(translations, rule.pattern());
+                    // Some messages, such as ban screens, arrive as plain English instead of translation components.
+                    if (values == null && rule.regex() != null) {
+                        if (plain == null) plain = plain(input);
+                        values = rule.translated(plain);
+                    }
+                } else {
                     if (plain == null) plain = plain(input);
-                    values = rule.translated(plain);
+                    values = rule.test(plain);
                 }
-            } else {
-                if (plain == null) plain = plain(input);
-                values = rule.test(plain);
+            } catch (IllegalStateException e) {
+                plugin.debug("Rewire '" + rule.name() + "' was skipped because it took too long to match a message.");
+                continue;
             }
             if (values == null) continue;
             if (rule.drop()) return new Match(rule.name(), null, false);
-            String text = fill(rule.to(), values, input);
-            return new Match(rule.name(), text, text.indexOf('%') >= 0);
+
+            // Placeholders are resolved on the configured text before message values are inserted,
+            // so text taken from a message is never read by PlaceholderAPI.
+            String template = rule.to();
+            boolean placeholders = Placeholders.enabled() && template.indexOf('%') >= 0;
+            if (placeholders) template = Placeholders.apply(viewer, template);
+            return new Match(rule.name(), fill(template, values, input), placeholders);
         }
         return null;
     }
@@ -108,8 +119,20 @@ public final class Rewires {
         Component output = start;
         boolean live = false;
         boolean touched = false;
+        String plain = null;
         for (Rewire rule : candidates) {
             if (!rule.partial()) continue;
+            // A quick check on the plain text skips rules that cannot match before the component is rebuilt.
+            if (plain == null) plain = PLAIN.serialize(output);
+            try {
+                if (!rule.regex().matcher(new Bounded(plain)).find()) continue;
+            } catch (IllegalStateException e) {
+                plugin.debug("Rewire '" + rule.name() + "' was skipped because it took too long to match a message.");
+                continue;
+            }
+            String template = Placeholders.enabled() && rule.to() != null && rule.to().indexOf('%') >= 0
+                    ? Placeholders.apply(viewer, rule.to())
+                    : rule.to();
             Component before = output;
             output = output.replaceText(TextReplacementConfig.builder()
                     .match(rule.regex())
@@ -120,10 +143,11 @@ public final class Rewires {
                             String value = match.group(group);
                             values.add(value == null ? "" : value.replace("<", "\\<"));
                         }
-                        return plugin.charger().render(fill(rule.to(), values, original), viewer);
+                        return plugin.charger().render(fill(template, values, original), viewer);
                     })
                     .build());
             if (!output.equals(before)) {
+                plain = null;
                 touched = true;
                 if (!rule.drop()) live |= lively(rule.to());
             }
@@ -154,6 +178,7 @@ public final class Rewires {
 
     // Render translations in English before matching so rules can inspect the text players see.
     private static String plain(final Component input) {
+        if (!hasTranslation(input)) return PLAIN.serialize(input);
         try {
             return PLAIN.serialize(GlobalTranslator.render(input, Locale.US));
         } catch (Throwable e) {
@@ -310,11 +335,34 @@ public final class Rewires {
         return null;
     }
 
-    private static String fill(final String template, final List<String> values, final Component input) {
-        String result = template;
-        if (result.contains("{text}")) result = result.replace("{text}", MINI.serialize(input));
-        for (int i = 0; i < values.size(); i++) result = result.replace("{" + i + "}", values.get(i));
-        return result;
+    // Fills {text}, {0}, {1} and so on in a single pass, so an inserted value is never filled a second time.
+    private String fill(final String template, final List<String> values, final Component input) {
+        StringBuilder out = new StringBuilder(template.length() + 32);
+        int at = 0;
+        while (at < template.length()) {
+            int open = template.indexOf('{', at);
+            int close = open < 0 ? -1 : template.indexOf('}', open);
+            if (close < 0) {
+                out.append(template, at, template.length());
+                break;
+            }
+            String key = template.substring(open + 1, close);
+            String value = null;
+            if (key.equals("text")) {
+                value = plugin.charger().source(input);
+            } else if (!key.isEmpty() && key.chars().allMatch(Character::isDigit) && key.length() < 4) {
+                int index = Integer.parseInt(key);
+                if (index < values.size()) value = values.get(index);
+            }
+            if (value == null) {
+                out.append(template, at, open + 1);
+                at = open + 1;
+                continue;
+            }
+            out.append(template, at, open).append(value);
+            at = close + 1;
+        }
+        return out.toString();
     }
 
     public record Match(@NotNull String rule, @Nullable String text, boolean placeholders) {
