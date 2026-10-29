@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.denizenmc"
-version = "0.2.1"
+version = "0.2.2-alpha.1"
 description = "Go beyond simple formatting with universal message customization, reusable components, and fully configurable commands."
 
 java {
@@ -22,7 +22,7 @@ dependencies {
     // 1.21.10 is the minimum API version required for player head components.
     // Newer API features are detected at runtime.
     compileOnly("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
-    compileOnly("com.github.retrooper:packetevents-spigot:2.13.0")
+    compileOnly("com.github.retrooper:packetevents-spigot:2.14.0")
     compileOnly("me.clip:placeholderapi:2.12.2")
 }
 

@@ -46,14 +46,20 @@ public final class Lightning extends JavaPlugin {
     private Pulse pulse;
     private Metrics metrics;
     private boolean packets;
+    private boolean shared;
+    private SurfaceListener surfaceListener;
     private final java.util.Map<String, Long> recentDebug = new java.util.concurrent.ConcurrentHashMap<>();
 
     @Override
     public void onLoad() {
         try {
-            PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
-            PacketEvents.getAPI().getSettings().reEncodeByDefault(false).checkForUpdates(false).bStats(false);
-            PacketEvents.getAPI().load();
+            // An installed PacketEvents plugin has already created and loaded its instance at this point.
+            shared = PacketEvents.getAPI() != null;
+            if (!shared) {
+                PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
+                PacketEvents.getAPI().getSettings().reEncodeByDefault(false).checkForUpdates(false).bStats(false);
+                PacketEvents.getAPI().load();
+            }
             packets = true;
         } catch (Throwable e) {
             getLogger().log(Level.SEVERE, "PacketEvents failed to load. Messages from other plugins cannot be processed during this session.", e);
@@ -90,8 +96,14 @@ public final class Lightning extends JavaPlugin {
                 ? new LoginScreen(this) : new LegacyLoginScreen(this), this);
 
         if (packets) {
-            PacketEvents.getAPI().getEventManager().registerListener(new SurfaceListener(this));
-            PacketEvents.getAPI().init();
+            surfaceListener = new SurfaceListener(this);
+            PacketEvents.getAPI().getEventManager().registerListener(surfaceListener);
+            // The PacketEvents plugin initializes and shuts down its own instance.
+            if (!shared) PacketEvents.getAPI().init();
+            getLogger().info(shared
+                    ? "Using the installed PacketEvents plugin."
+                    : "Using the bundled PacketEvents " + LightningLoader.BUNDLED_VERSION
+                    + ". Install the PacketEvents plugin to receive protocol updates independently of Lightning.");
         }
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
@@ -116,7 +128,8 @@ public final class Lightning extends JavaPlugin {
         if (pulse != null) pulse.stop();
         if (commands != null) commands.save();
         if (metrics != null) metrics.shutdown();
-        if (packets) PacketEvents.getAPI().terminate();
+        if (packets && shared && surfaceListener != null) PacketEvents.getAPI().getEventManager().unregisterListener(surfaceListener);
+        if (packets && !shared) PacketEvents.getAPI().terminate();
     }
 
     private static boolean classExists(final String name) {

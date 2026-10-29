@@ -9,6 +9,7 @@ website: https://denizenmc.com
 description: Go beyond simple formatting with universal message customization, reusable components, and fully configurable commands.
 softdepend:
   - PlaceholderAPI
+  - packetevents
 
 permissions:
   lightning.admin:

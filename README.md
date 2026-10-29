@@ -52,7 +52,13 @@ Player-supplied text remains plain text rather than being interpreted as formatt
 2. Place it in your server's `plugins/` folder.
 3. Restart your server.
 
-PacketEvents is downloaded on first startup, so no separate installation is required.
+## PacketEvents
+
+Lightning requires PacketEvents for packet handling.
+- PacketEvents already installed: Lightning uses the installed PacketEvents plugin.
+- PacketEvents not installed: Lightning automatically downloads PacketEvents 2.14.0 on startup.
+
+If PacketEvents is already installed, ensure its version supports your Minecraft server version.
 
 ## Configuration Examples
 
