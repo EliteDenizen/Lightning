@@ -10,6 +10,9 @@ description: Go beyond simple formatting with universal message customization, r
 softdepend:
   - PlaceholderAPI
   - packetevents
+  - ViaVersion
+  - ViaBackwards
+  - ViaRewind
 
 permissions:
   lightning.admin:

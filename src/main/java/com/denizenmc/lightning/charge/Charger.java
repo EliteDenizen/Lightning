@@ -95,7 +95,7 @@ public final class Charger {
 
         if (answer == UNTOUCHED) return null;
         if (answer == DROPPED) return Charged.dropped();
-        if (answer instanceof Component component) return Charged.inPlace(component);
+        if (answer instanceof Component component) return fit(Charged.inPlace(component), viewer);
 
         Outcome outcome = work(input, viewer, surface);
         if (outcome.lasting()) {
@@ -110,7 +110,29 @@ public final class Charger {
             );
         }
 
-        return outcome.charged();
+        return fit(outcome.charged(), viewer);
+    }
+
+    // Results are cached for every client, so anything an older client cannot display is replaced per viewer.
+    private @Nullable Charged fit(@Nullable final Charged charged, @Nullable final Player viewer) {
+        if (charged == null || charged.silent() || !Stash.holds(charged.component()) || Clients.objects(viewer)) return charged;
+        plugin.debug("Replaced player heads and sprites for "
+                + (viewer == null ? "a login screen" : viewer.getName() + ", their client is older than 1.21.9") + ".");
+        return new Charged(
+                Stash.flatten(charged.component(), fallback()),
+                charged.delivery(),
+                charged.silent(),
+                charged.ticking(),
+                charged.effects()
+        );
+    }
+
+    private Component fallback() {
+        try {
+            return MiniMessage.miniMessage().deserialize(plugin.settings().faceFallback());
+        } catch (RuntimeException e) {
+            return Component.empty();
+        }
     }
 
     /**
@@ -130,7 +152,8 @@ public final class Charger {
         Component cached = parsed.get(key);
 
         if (cached != null) {
-            if (!blank(cached)) to.sendMessage(own(cached));
+            Component fitted = Stash.holds(cached) && !Clients.objects(viewer) ? Stash.flatten(cached, fallback()) : cached;
+            if (!blank(fitted)) to.sendMessage(own(fitted));
             return;
         }
 
@@ -157,6 +180,9 @@ public final class Charger {
         if (!state.live() && !state.personal() && state.delivery() == Charged.Delivery.IN_PLACE) {
             remember(parsed, key, output);
         }
+
+        // Cached output stays complete; only this viewer's copy is adapted to their client.
+        if (Stash.holds(output) && !Clients.objects(viewer)) output = Stash.flatten(output, fallback());
 
         switch (state.delivery()) {
             case ACTIONBAR -> to.sendActionBar(output);

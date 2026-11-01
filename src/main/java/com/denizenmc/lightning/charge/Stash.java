@@ -53,7 +53,15 @@ final class Stash {
         return input.children(children);
     }
 
-    private static boolean holds(final Component component) {
+    // Replaces every object component with the fallback, keeping any children.
+    static @NotNull Component flatten(@NotNull final Component input, @NotNull final Component fallback) {
+        List<Component> children = new ArrayList<>(input.children().size());
+        for (Component child : input.children()) children.add(flatten(child, fallback));
+        if (Faces.isObject(input)) return fallback.append(children);
+        return input.children(children);
+    }
+
+    static boolean holds(final Component component) {
         if (Faces.isObject(component)) return true;
         for (Component child : component.children()) {
             if (holds(child)) return true;
