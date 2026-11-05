@@ -2,6 +2,8 @@ package com.denizenmc.lightning.rewire;
 
 import com.denizenmc.lightning.Lightning;
 import com.denizenmc.lightning.Yaml;
+import com.denizenmc.lightning.charge.Charger;
+import com.denizenmc.lightning.charge.Literal;
 import com.denizenmc.lightning.charge.Surface;
 import com.denizenmc.lightning.charge.Placeholders;
 import net.kyori.adventure.text.Component;
@@ -141,9 +143,10 @@ public final class Rewires {
                         List<String> values = new ArrayList<>(match.groupCount() + 1);
                         for (int group = 0; group <= match.groupCount(); group++) {
                             String value = match.group(group);
-                            values.add(value == null ? "" : value.replace("<", "\\<"));
+                            values.add(value == null ? "" : Literal.escape(value));
                         }
-                        return plugin.charger().render(fill(template, values, original), viewer);
+                        // Marked as finished so the tag pass that follows leaves the escaped values literal.
+                        return Charger.own(plugin.charger().render(fill(template, values, original), viewer));
                     })
                     .build());
             if (!output.equals(before)) {

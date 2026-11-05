@@ -21,7 +21,7 @@ final class Stash {
     private final Component component;
 
     private Stash(final Component input) {
-        this.component = holds(input) ? out(input) : input;
+        this.component = keeps(input) ? out(input) : input;
     }
 
     static @NotNull Stash of(@NotNull final Component input) {
@@ -44,6 +44,12 @@ final class Stash {
     }
 
     private Component out(final Component input) {
+        // Text Lightning already produced, such as a rewire's replacement, is set aside whole. Any tag text
+        // left in it was escaped on purpose and would otherwise be parsed when the message is read again.
+        if (Charger.isOwn(input)) {
+            objects.add(input);
+            return Component.text(OPEN + String.valueOf(objects.size() - 1) + CLOSE);
+        }
         List<Component> children = new ArrayList<>(input.children().size());
         for (Component child : input.children()) children.add(out(child));
         if (Faces.isObject(input)) {
@@ -61,6 +67,16 @@ final class Stash {
         return input.children(children);
     }
 
+    // Whether the component contains anything to set aside: objects, or text Lightning already produced.
+    private static boolean keeps(final Component component) {
+        if (Faces.isObject(component) || Charger.isOwn(component)) return true;
+        for (Component child : component.children()) {
+            if (keeps(child)) return true;
+        }
+        return false;
+    }
+
+    // Whether the component contains objects, which clients older than 1.21.9 cannot display.
     static boolean holds(final Component component) {
         if (Faces.isObject(component)) return true;
         for (Component child : component.children()) {

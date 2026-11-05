@@ -64,7 +64,22 @@ public final class CommandBook {
             for (Path path : files) read(folder.relativize(path).toString(), path, found);
         }
         commands = Map.copyOf(found);
+        // Write uses recorded since the last autosave first, or a reload would quietly reset recent cooldowns.
+        ledger.save();
         ledger.load();
+        Map<String, Long> windows = new HashMap<>();
+        for (Spec spec : found.values()) windows(spec, windows);
+        ledger.retain(windows);
+    }
+
+    // Records how long each command's uses matter: the longer of its cooldown and limit window, or forever.
+    private static void windows(final Spec spec, final Map<String, Long> out) {
+        if (spec.cooldown() > 0 || spec.limit() != null) {
+            long window = spec.limit() != null && spec.limit().window() == 0 ? 0
+                    : Math.max(spec.cooldown(), spec.limit() == null ? 0 : spec.limit().window());
+            out.put(Ledger.path(spec), window);
+        }
+        for (Spec child : spec.subcommands().values()) windows(child, out);
     }
 
     public void save() {

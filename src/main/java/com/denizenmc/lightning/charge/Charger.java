@@ -26,6 +26,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class Charger {
 
     private static final MiniMessage MINI = MiniMessage.miniMessage();
+    // Parses with only the resolvers Lightning passes. MiniMessage.miniMessage() always adds every standard tag
+    // to the ones given, which would let click, hover and insert tags through on surfaces meant to block them.
+    private static final MiniMessage PARSER = MiniMessage.builder().tags(TagResolver.empty()).build();
     private static final String OWN = "\u2063";
     private static final Object UNTOUCHED = new Object();
     private static final Object DROPPED = new Object();
@@ -67,13 +70,19 @@ public final class Charger {
         placeholders = plugin.settings().placeholderApi()
                 && Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
 
-        Placeholders.enable(placeholders);
+        Placeholders.enable(placeholders, plugin.settings().placeholderTrust());
         forget();
     }
 
     public void forget() {
         parsed.clear();
         known.clear();
+    }
+
+    // Drops text cached for one viewer, such as Sparks that depend on their language.
+    public void forget(@NotNull final java.util.UUID viewer) {
+        String suffix = "\u0000" + viewer;
+        parsed.keySet().removeIf(key -> key.endsWith(suffix));
     }
 
     /**
@@ -224,8 +233,8 @@ public final class Charger {
     // Parses Lightning's own text, such as command feedback. Bolt effects remain disabled here.
     public @NotNull Component render(@NotNull final String text, @Nullable final Player viewer) {
         return viewer == null
-                ? MINI.deserialize(text, full)
-                : MINI.deserialize(text, viewer, full);
+                ? PARSER.deserialize(text, full)
+                : PARSER.deserialize(text, viewer, full);
     }
 
     private Outcome work(final Component input, final Player viewer, final Surface surface) {
@@ -273,12 +282,15 @@ public final class Charger {
         String unescaped = Sense.unescape(serialized);
         Guard.Defused defused = plugin.guard().defuse(unescaped);
 
+        Placeholders.takeContained();
         Outcome outcome = restore(
                 parse(defused.text(), viewer, surface, resolvePlaceholders && !defused.blocksPlaceholders()),
                 stash
         );
 
-        outcome = again(outcome, viewer, surface);
+        // Placeholder values whose tags were escaped are now literal text. A second pass would read that text
+        // as tags again and undo the escaping, so it only runs when nothing was escaped.
+        if (!Placeholders.takeContained()) outcome = again(outcome, viewer, surface);
 
         // Input affected by Guard depends on recent player messages and must not be cached.
         return defused.text().equals(unescaped)
@@ -427,8 +439,8 @@ public final class Charger {
             final TagResolver resolver
     ) {
         return viewer == null
-                ? MINI.deserialize(text, resolver)
-                : MINI.deserialize(text, viewer, resolver);
+                ? PARSER.deserialize(text, resolver)
+                : PARSER.deserialize(text, viewer, resolver);
     }
 
     private <K, V> void remember(final Map<K, V> cache, final K key, final V value) {

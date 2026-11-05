@@ -41,6 +41,11 @@ final class Sense {
     static boolean hasWrittenTag(@NotNull final String serialized, @NotNull final TagResolver resolver) {
         int index = serialized.indexOf("\\<");
         while (index >= 0) {
+            // A backslash written before the tag escapes it, so it stays literal text.
+            if (index > 0 && serialized.charAt(index - 1) == '\\') {
+                index = serialized.indexOf("\\<", index + 2);
+                continue;
+            }
             int start = index + 2;
             if (start < serialized.length() && (serialized.charAt(start) == '/' || serialized.charAt(start) == '!')) start++;
             int end = start;
@@ -69,8 +74,37 @@ final class Sense {
         return false;
     }
 
+    // Turns text written as "<tag>" back into a live tag, while keeping text the author or a player
+    // escaped as "\<tag>" literal. The serializer writes a content backslash as "\\" and '<' as "\<",
+    // so "\\\<" is a backslash written before '<' and must stay escaped. Replacing every "\<" would
+    // turn it into "\\<", a literal backslash followed by a live tag, which bypasses escaping.
     static @NotNull String unescape(@NotNull final String serialized) {
-        return serialized.replace("\\<", "<");
+        if (serialized.indexOf('\\') < 0) return serialized;
+        StringBuilder out = new StringBuilder(serialized.length());
+        int length = serialized.length();
+        for (int i = 0; i < length; i++) {
+            char c = serialized.charAt(i);
+            if (c == '\\' && i + 1 < length) {
+                char next = serialized.charAt(i + 1);
+                if (next == '<') {
+                    out.append('<');
+                    i++;
+                    continue;
+                }
+                if (next == '\\') {
+                    if (i + 3 < length && serialized.charAt(i + 2) == '\\' && serialized.charAt(i + 3) == '<') {
+                        out.append("\\<");
+                        i += 3;
+                    } else {
+                        out.append("\\\\");
+                        i++;
+                    }
+                    continue;
+                }
+            }
+            out.append(c);
+        }
+        return out.toString();
     }
 
     // Converts legacy section-sign formatting codes, often returned by PlaceholderAPI,
@@ -85,12 +119,13 @@ final class Sense {
                 continue;
             }
             char code = Character.toLowerCase(text.charAt(i + 1));
-            if (code == 'x' && i + 13 < text.length()) {
-                StringBuilder hex = new StringBuilder(6);
-                for (int digit = i + 3; digit <= i + 13; digit += 2) hex.append(text.charAt(digit));
-                out.append("<#").append(hex).append('>');
-                i += 13;
-                continue;
+            if (code == 'x') {
+                String hex = sectionHex(text, i);
+                if (hex != null) {
+                    out.append("<#").append(hex).append('>');
+                    i += 13;
+                    continue;
+                }
             }
             String tag = legacyTag(code);
             if (tag == null) {
@@ -101,6 +136,18 @@ final class Sense {
             i++;
         }
         return out.toString();
+    }
+
+    // Reads the six digits of a "§x§R§R§G§G§B§B" color, or returns null when the sequence is malformed.
+    private static String sectionHex(final String text, final int at) {
+        if (at + 13 >= text.length()) return null;
+        StringBuilder hex = new StringBuilder(6);
+        for (int marker = at + 2; marker <= at + 12; marker += 2) {
+            char digit = text.charAt(marker + 1);
+            if (text.charAt(marker) != '§' || Character.digit(digit, 16) < 0) return null;
+            hex.append(digit);
+        }
+        return hex.toString();
     }
 
     private static String legacyTag(final char code) {

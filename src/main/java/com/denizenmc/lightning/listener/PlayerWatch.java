@@ -7,12 +7,15 @@ import com.denizenmc.lightning.charge.Surface;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.SignChangeEvent;
+import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerLocaleChangeEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -34,29 +37,48 @@ public final class PlayerWatch implements Listener {
         this.plugin = plugin;
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onChat(@NotNull final AsyncChatEvent event) {
         if (trusted(event.getPlayer())) return;
         plugin.guard().remember(PLAIN.serialize(event.originalMessage()));
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onCommand(@NotNull final PlayerCommandPreprocessEvent event) {
         if (trusted(event.getPlayer())) return;
         String command = event.getMessage();
         int first = command.indexOf(' ');
         if (first < 0) return;
         String label = command.substring(1, first).toLowerCase(Locale.ROOT);
-        if (OWN_LABELS.contains(label.substring(label.indexOf(':') + 1))) return;
+        // Admins test tags with /lightning parse, so their input there is meant to be processed. Anyone else
+        // only gets the unknown-command reply, which echoes the input back and must stay literal.
+        if (OWN_LABELS.contains(label.substring(label.indexOf(':') + 1)) && event.getPlayer().hasPermission("lightning.admin")) return;
         plugin.guard().remember(command.substring(first + 1));
         int second = command.indexOf(' ', first + 1);
         if (second > 0) plugin.guard().remember(command.substring(second + 1));
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onSign(@NotNull final SignChangeEvent event) {
         if (trusted(event.getPlayer())) return;
         for (Component line : event.lines()) plugin.guard().remember(PLAIN.serialize(line));
+    }
+
+    // Anvil names end up on items and, through name tags, on mobs, both of which Lightning can process.
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onRename(@NotNull final PrepareAnvilEvent event) {
+        if (!(event.getView().getPlayer() instanceof Player player) || trusted(player)) return;
+        plugin.guard().remember(event.getView().getRenameText());
+    }
+
+    // Items aren't processed in creative mode, but the client already holds the processed copies it was sent
+    // in survival. Creative clients send items back to the server as they are, which would save Lightning's
+    // formatting into the real item, so the inventory is sent again unprocessed.
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onGameMode(@NotNull final PlayerGameModeChangeEvent event) {
+        if (event.getNewGameMode() != GameMode.CREATIVE || !plugin.settings().reaches(Surface.ITEMS)) return;
+        Player player = event.getPlayer();
+        player.getScheduler().run(plugin, task -> player.updateInventory(), null);
     }
 
     // Trusted staff can use Lightning tags freely; their input is intended to be processed.
@@ -64,10 +86,11 @@ public final class PlayerWatch implements Listener {
         return player.hasPermission("lightning.trusted");
     }
 
-    // Clear cached locale-dependent data when a player changes language.
+    // Clear the player's cached locale-dependent text when they change language. Every client reports its
+    // language while joining, so clearing every player's cache here would empty it on each join.
     @EventHandler
     public void onLocale(@NotNull final PlayerLocaleChangeEvent event) {
-        plugin.charger().forget();
+        plugin.charger().forget(event.getPlayer().getUniqueId());
     }
 
     // Charging the kick reason here, rather than only in the packet, means the server logs the finished
@@ -84,6 +107,7 @@ public final class PlayerWatch implements Listener {
         plugin.faces().forget(event.getPlayer().getUniqueId());
         plugin.inspector().forget(event.getPlayer().getUniqueId());
         plugin.pulse().forget(event.getPlayer().getUniqueId());
+        plugin.charger().forget(event.getPlayer().getUniqueId());
     }
 
     @EventHandler(priority = EventPriority.HIGH)

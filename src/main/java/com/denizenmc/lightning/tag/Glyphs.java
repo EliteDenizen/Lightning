@@ -40,9 +40,21 @@ public final class Glyphs {
                 TagResolver.resolver("clock", (args, context) -> {
                     ChargeState state = ChargeState.current();
                     if (state != null) state.markTicking();
-                    String pattern = args.hasNext() ? args.pop().value() : "HH:mm";
+                    // MiniMessage splits arguments at ':', so <clock:HH:mm:ss> arrives as three parts.
+                    StringBuilder written = new StringBuilder();
+                    while (args.hasNext()) {
+                        if (!written.isEmpty()) written.append(':');
+                        written.append(args.pop().value());
+                    }
+                    String pattern = written.isEmpty() ? "HH:mm" : written.toString();
                     try {
-                        DateTimeFormatter format = FORMATS.computeIfAbsent(pattern, DateTimeFormatter::ofPattern);
+                        // Patterns can come from any message, so the cache is bounded.
+                        DateTimeFormatter format = FORMATS.get(pattern);
+                        if (format == null) {
+                            format = DateTimeFormatter.ofPattern(pattern);
+                            if (FORMATS.size() >= 64) FORMATS.clear();
+                            FORMATS.put(pattern, format);
+                        }
                         return Tag.selfClosingInserting(Component.text(ZonedDateTime.now(settings.zone()).format(format)));
                     } catch (RuntimeException e) {
                         return Tag.selfClosingInserting(Component.text("?"));

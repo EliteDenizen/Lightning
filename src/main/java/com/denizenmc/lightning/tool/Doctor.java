@@ -78,9 +78,8 @@ public final class Doctor {
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i);
             if (line.indexOf('<') >= 0) inspect(name, i + 1, line, findings);
-            if (line.indexOf('&') >= 0 || line.indexOf('§') >= 0) {
-                if (LEGACY.matcher(line).find()) legacy++;
-            }
+            // Counted the way /lightning convert would change the line, so links such as "?a=1&b=2" are not reported.
+            if ((line.indexOf('&') >= 0 || line.indexOf('§') >= 0) && LEGACY.matcher(line).find() && !Converter.line(line).equals(line)) legacy++;
         }
         if (legacy > 0) findings.add(new Finding(name, 0, "", legacy + " lines still use legacy color codes. Run /lightning convert to update them."));
     }
@@ -133,7 +132,7 @@ public final class Doctor {
                 sender.sendMessage(plugin.message("more",
                         Placeholder.unparsed("count", String.valueOf(findings.size() - SHOWN))));
             } catch (IOException e) {
-                plugin.getLogger().warning("\"Unable to write check.txt: " + e.getMessage());
+                plugin.getLogger().warning("Unable to write check.txt: " + e.getMessage());
             }
         }
     }

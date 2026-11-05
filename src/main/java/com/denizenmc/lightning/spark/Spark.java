@@ -60,7 +60,14 @@ public sealed interface Spark permits Spark.Text, Spark.Color, Spark.Formula, Sp
                     break;
                 }
             }
-            return Tag.preProcessParsed(prepare(text.replace("{value}", shape(number, format)), values, state));
+            String shaped;
+            try {
+                shaped = shape(number, format);
+            } catch (RuntimeException e) {
+                // An invalid number format affects only this value, not the whole message.
+                shaped = String.valueOf(number);
+            }
+            return Tag.preProcessParsed(prepare(text.replace("{value}", shaped), values, state));
         }
     }
 

@@ -25,7 +25,7 @@ public final class Pulse {
 
     private final Lightning plugin;
     private final Map<UUID, Map<String, Beat>> beats = new ConcurrentHashMap<>();
-    private ScheduledTask task;
+    private volatile ScheduledTask task;
 
     public Pulse(@NotNull final Lightning plugin) {
         this.plugin = plugin;

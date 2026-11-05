@@ -2,6 +2,7 @@ package com.denizenmc.lightning.command;
 
 import com.denizenmc.lightning.Lightning;
 import com.denizenmc.lightning.charge.Charged;
+import com.denizenmc.lightning.charge.Charger;
 import com.denizenmc.lightning.charge.Surface;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -30,6 +31,12 @@ public final class LightningCommand implements BasicCommand {
 
     public LightningCommand(@NotNull final Lightning plugin) {
         this.plugin = plugin;
+    }
+
+    // Players without the permission don't receive /lightning in their command tree at all.
+    @Override
+    public @NotNull String permission() {
+        return "lightning.admin";
     }
 
     @Override
@@ -110,9 +117,9 @@ public final class LightningCommand implements BasicCommand {
         if (viewer != null) charged.effects().forEach(effect -> effect.accept(viewer));
         if (charged.silent()) return;
         switch (charged.delivery()) {
-            case ACTIONBAR -> sender.sendActionBar(charged.component());
-            case TITLE -> sender.showTitle(Title.title(charged.component(), Component.empty()));
-            case IN_PLACE -> sender.sendMessage(charged.component());
+            case ACTIONBAR -> sender.sendActionBar(Charger.own(charged.component()));
+            case TITLE -> sender.showTitle(Title.title(Charger.own(charged.component()), Component.empty()));
+            case IN_PLACE -> sender.sendMessage(Charger.own(charged.component()));
         }
     }
 

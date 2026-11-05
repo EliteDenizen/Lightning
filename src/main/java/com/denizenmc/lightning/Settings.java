@@ -1,5 +1,6 @@
 package com.denizenmc.lightning;
 
+import com.denizenmc.lightning.charge.Placeholders;
 import com.denizenmc.lightning.charge.Surface;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -20,6 +21,7 @@ public final class Settings {
     private final Map<String, String> messages = new HashMap<>();
     private boolean markerOnly;
     private boolean placeholderApi;
+    private Placeholders.Trust placeholderTrust = Placeholders.Trust.FORMATTING;
     private boolean guard;
     private long guardMemory;
     private boolean plainItemNames;
@@ -41,6 +43,7 @@ public final class Settings {
 
         markerOnly = config.getString("detect", "smart").equalsIgnoreCase("marker");
         placeholderApi = config.getBoolean("placeholders", true);
+        placeholderTrust = Placeholders.Trust.of(config.getString("placeholder-tags", "formatting"));
         guardMemory = Durations.millis(config.getString("guard"), 600_000L);
         guard = guardMemory > 0;
         plainItemNames = !config.getBoolean("items.italics", false);
@@ -81,6 +84,10 @@ public final class Settings {
 
     public boolean placeholderApi() {
         return placeholderApi;
+    }
+
+    public @NotNull Placeholders.Trust placeholderTrust() {
+        return placeholderTrust;
     }
 
     public boolean guard() {

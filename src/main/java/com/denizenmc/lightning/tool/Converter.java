@@ -46,13 +46,17 @@ public final class Converter {
             int lines = 0;
             List<String[]> samples = new ArrayList<>();
             for (Path file : ConfigFiles.texts(folder)) {
-                // ISO-8859-1 maps each byte to one character, preserving untouched bytes when writing the file back.
-                String original;
+                // Most files are UTF-8, where § takes two bytes. Reading those as ISO-8859-1 would leave a stray
+                // "Â" behind every converted code. Files that are not valid UTF-8 are read as ISO-8859-1,
+                // which maps each byte to one character and writes untouched bytes back unchanged.
+                byte[] bytes;
                 try {
-                    original = java.nio.file.Files.readString(file, StandardCharsets.ISO_8859_1);
+                    bytes = java.nio.file.Files.readAllBytes(file);
                 } catch (IOException e) {
                     continue;
                 }
+                java.nio.charset.Charset charset = utf8(bytes) ? StandardCharsets.UTF_8 : StandardCharsets.ISO_8859_1;
+                String original = new String(bytes, charset);
 
                 String[] before = original.split("\n", -1);
                 StringBuilder after = new StringBuilder(original.length() + 64);
@@ -74,8 +78,8 @@ public final class Converter {
                 try {
                     Path copy = backup.resolve(folder.relativize(file));
                     java.nio.file.Files.createDirectories(copy.getParent());
-                    java.nio.file.Files.copy(file, copy);
-                    java.nio.file.Files.writeString(file, after.toString(), StandardCharsets.ISO_8859_1);
+                    java.nio.file.Files.copy(file, copy, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    java.nio.file.Files.writeString(file, after.toString(), charset);
                 } catch (IOException e) {
                     plugin.getLogger().warning("Unable to convert " + file + ": " + e.getMessage());
                 }
@@ -98,6 +102,18 @@ public final class Converter {
             // Example tags are displayed as plain text so Lightning does not process them again.
             sender.sendMessage(Charger.own(summary.append(buttons)));
         });
+    }
+
+    private static boolean utf8(final byte[] bytes) {
+        try {
+            StandardCharsets.UTF_8.newDecoder()
+                    .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
+                    .decode(java.nio.ByteBuffer.wrap(bytes));
+            return true;
+        } catch (java.nio.charset.CharacterCodingException e) {
+            return false;
+        }
     }
 
     private Component examples(final List<String[]> samples) {

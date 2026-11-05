@@ -2,6 +2,7 @@ package com.denizenmc.lightning.custom;
 
 import com.denizenmc.lightning.Durations;
 import com.denizenmc.lightning.Lightning;
+import com.denizenmc.lightning.charge.Literal;
 import com.denizenmc.lightning.charge.Placeholders;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -118,8 +119,10 @@ final class Runner {
 
     // Resolve configured placeholders before inserting argument values. Player input is never passed to
     // PlaceholderAPI, interpreted as a MiniMessage tag, or allowed to introduce command selectors such as @a.
+    // Commands and conditions receive placeholder values as PlaceholderAPI returns them, since a console
+    // command expects "§c", not the "<red>" tag Lightning uses for messages.
     private String prepare(final String template, final Context context, final @Nullable Player reader, final boolean message) {
-        String text = Placeholders.apply(reader, template);
+        String text = message ? Placeholders.apply(reader, template) : Placeholders.raw(reader, template);
 
         // Resolve placeholders in a single pass so inserted values are never processed again.
         StringBuilder out = new StringBuilder(text.length() + 32);
@@ -137,7 +140,7 @@ final class Runner {
                 at = open + 1;
                 continue;
             }
-            out.append(text, at, open).append(message ? value.replace("\\", "\\\\").replace("<", "\\<") : value.replace("@", ""));
+            out.append(text, at, open).append(message ? Literal.escape(value) : argument(value));
             at = close + 1;
         }
         return out.toString();
@@ -145,6 +148,17 @@ final class Runner {
 
     private static String command(final String text) {
         return text.startsWith("/") ? text.substring(1) : text;
+    }
+
+    // Player input inserted into a command can't add selectors such as @a, or line breaks and section signs
+    // that some command parsers treat specially.
+    private static String argument(final @NotNull String value) {
+        StringBuilder out = new StringBuilder(value.length());
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if (c != '@' && c != '§' && c != '\n' && c != '\r' && !Character.isISOControl(c)) out.append(c);
+        }
+        return out.toString();
     }
 
     private void dispatch(final String command) {

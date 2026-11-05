@@ -10,6 +10,7 @@ import java.util.Locale;
 final class Condition {
 
     private static final String[] OPERATORS = {">=", "<=", "!=", "==", ">", "<"};
+    private static final java.util.regex.Pattern LEGACY = java.util.regex.Pattern.compile("(?i)§[0-9a-fk-orx]");
 
     private Condition() {
     }
@@ -63,7 +64,8 @@ final class Condition {
     }
 
     private static String clean(final String value) {
-        String trimmed = value.trim();
+        // Placeholder values can carry legacy colors, which would stop "§a100" from comparing as a number.
+        String trimmed = LEGACY.matcher(value).replaceAll("").trim();
         if (trimmed.length() >= 2 && (trimmed.startsWith("'") && trimmed.endsWith("'") || trimmed.startsWith("\"") && trimmed.endsWith("\""))) {
             return trimmed.substring(1, trimmed.length() - 1);
         }

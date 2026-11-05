@@ -7,6 +7,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +24,8 @@ final class Ledger {
     private final Lightning plugin;
     private final File file;
     private final Map<String, List<Long>> uses = new ConcurrentHashMap<>();
+    // How long each command's timestamps matter, keyed like the stored entries. 0 means forever.
+    private volatile Map<String, Long> retention = Map.of();
     private volatile boolean dirty;
 
     Ledger(@NotNull final Lightning plugin) {
@@ -50,7 +57,7 @@ final class Ledger {
             List<Long> list = times == null ? new ArrayList<>() : new ArrayList<>(times);
             list.add(System.currentTimeMillis());
             while (list.size() > keep) list.remove(0);
-            return list;
+            return List.copyOf(list);
         });
         dirty = true;
     }
@@ -60,7 +67,12 @@ final class Ledger {
         dirty = true;
     }
 
-    void load() {
+    // Called after commands load, so entries for commands whose cooldown has long passed can be dropped.
+    void retain(@NotNull final Map<String, Long> windows) {
+        retention = Map.copyOf(windows);
+    }
+
+    synchronized void load() {
         uses.clear();
         if (!file.exists()) return;
         YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
@@ -68,12 +80,15 @@ final class Ledger {
             ConfigurationSection section = yaml.getConfigurationSection(player);
             if (section == null) continue;
             for (String command : section.getKeys(false)) {
-                uses.put(player + "/" + command, new ArrayList<>(section.getLongList(command)));
+                uses.put(player + "/" + command, List.copyOf(section.getLongList(command)));
             }
         }
     }
 
-    void save() {
+    // Saves can run from the autosave task and from shutdown at the same time, so they take turns,
+    // and the file is replaced in one step so a crash mid-save cannot leave it half written.
+    synchronized void save() {
+        prune();
         if (!dirty) return;
         dirty = false;
         YamlConfiguration yaml = new YamlConfiguration();
@@ -81,16 +96,44 @@ final class Ledger {
             int split = key.indexOf('/');
             yaml.set(key.substring(0, split) + "." + key.substring(split + 1), times);
         });
+        Path target = file.toPath();
+        Path temporary = target.resolveSibling(file.getName() + ".tmp");
         try {
-            file.getParentFile().mkdirs();
-            yaml.save(file);
+            Files.createDirectories(target.getParent());
+            Files.writeString(temporary, yaml.saveToString(), StandardCharsets.UTF_8);
+            try {
+                Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (IOException e) {
+            dirty = true;
             plugin.getLogger().warning("Command cooldowns and limits couldn't be saved: " + e.getMessage());
         }
     }
 
+    // Removes uses that no longer affect a cooldown or limit. Commands that are no longer configured are kept,
+    // so temporarily disabling a command does not let players claim a one-time reward again.
+    private void prune() {
+        Map<String, Long> windows = retention;
+        if (windows.isEmpty()) return;
+        long now = System.currentTimeMillis();
+        uses.replaceAll((key, times) -> {
+            Long window = windows.get(key.substring(key.indexOf('/') + 1));
+            if (window == null || window == 0) return times;
+            List<Long> kept = times.stream().filter(time -> now - time < window).toList();
+            if (kept.size() != times.size()) dirty = true;
+            return kept;
+        });
+        if (uses.values().removeIf(List::isEmpty)) dirty = true;
+    }
+
     // Replace dots in command paths so they don't create nested YAML keys.
+    static String path(final Spec spec) {
+        return spec.path().replace('.', '-');
+    }
+
     private static String key(final UUID player, final Spec spec) {
-        return player + "/" + spec.path().replace('.', '-');
+        return player + "/" + path(spec);
     }
 }

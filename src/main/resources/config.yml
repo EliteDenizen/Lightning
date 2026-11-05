@@ -41,8 +41,20 @@ surfaces:
 # Requires PlaceholderAPI to be installed.
 placeholders: true
 
-# Duration that Guard retains player input from chat, commands, and signs
-# to prevent user supplied text from being interpreted as Lightning formatting.
+# Which tags a placeholder's value may use. Values often contain text players
+# control, such as nicknames, team names, or chat prefixes.
+# formatting: Colors, decorations, gradients, and fonts work. Clicks, hovers,
+#             Sparks, and Bolts in a value are shown as plain text.
+# all:        Every tag in a value is processed. Only use this when no
+#             placeholder can contain text a player wrote.
+# none:       Every tag in a value is shown as plain text.
+# Legacy § colors returned by placeholders are converted in every mode.
+placeholder-tags: formatting
+
+# Duration that Guard retains player input from chat, commands, signs, and
+# anvil renames to prevent user supplied text from being interpreted as
+# Lightning formatting. Input is recorded even when another plugin cancels
+# the event, since chat plugins often cancel it and send their own copy.
 # Players with lightning.trusted bypass Guard.
 # Set to 0 to disable.
 guard: 10m

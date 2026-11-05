@@ -1,5 +1,6 @@
 package com.denizenmc.lightning.rewire;
 
+import com.denizenmc.lightning.charge.Literal;
 import com.denizenmc.lightning.charge.Surface;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -78,6 +79,6 @@ record Rewire(@NotNull String name, @NotNull Kind kind, @NotNull String pattern,
     }
 
     private static String escape(final String text) {
-        return text.replace("<", "\\<");
+        return Literal.escape(text);
     }
 }
