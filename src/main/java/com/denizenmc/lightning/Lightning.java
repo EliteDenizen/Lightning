@@ -47,6 +47,7 @@ public final class Lightning extends JavaPlugin {
     private Metrics metrics;
     private boolean packets;
     private boolean shared;
+    private volatile boolean itemsSafe = true;
     private SurfaceListener surfaceListener;
     private final java.util.Map<String, Long> recentDebug = new java.util.concurrent.ConcurrentHashMap<>();
 
@@ -104,6 +105,8 @@ public final class Lightning extends JavaPlugin {
                     ? "Using the installed PacketEvents plugin."
                     : "Using the bundled PacketEvents " + LightningLoader.BUNDLED_VERSION
                     + ". Install the PacketEvents plugin to receive protocol updates independently of Lightning.");
+            if (shared) warnIfOutdated();
+            itemsSafe = checkItems();
         }
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
@@ -130,6 +133,43 @@ public final class Lightning extends JavaPlugin {
         if (metrics != null) metrics.shutdown();
         if (packets && shared && surfaceListener != null) PacketEvents.getAPI().getEventManager().unregisterListener(surfaceListener);
         if (packets && !shared) PacketEvents.getAPI().terminate();
+    }
+
+    // PacketEvents before 2.15.0 misreads goat horns on 26.3. Rewriting item packets read that way could corrupt
+    // the items a player sees, so items are left alone until PacketEvents is updated.
+    private boolean checkItems() {
+        try {
+            boolean newServer = PacketEvents.getAPI().getServerManager().getVersion()
+                    .isNewerThanOrEquals(com.github.retrooper.packetevents.manager.server.ServerVersion.V_26_3);
+            boolean oldPackets = PacketEvents.getAPI().getVersion()
+                    .isOlderThan(com.github.retrooper.packetevents.util.PEVersion.fromString("2.15.0"));
+            if (newServer && oldPackets) {
+                if (settings.reaches(com.denizenmc.lightning.charge.Surface.ITEMS)) {
+                    getLogger().warning("Item names and lore are not processed on this Minecraft version until PacketEvents 2.15.0 or newer is installed.");
+                }
+                return false;
+            }
+        } catch (Throwable ignored) {
+            // Older PacketEvents builds don't know 26.3 and can't run on it anyway.
+        }
+        return true;
+    }
+
+    public boolean itemsSafe() {
+        return itemsSafe;
+    }
+
+    // An older PacketEvents plugin may not know newer packets, such as dialogs, or the newest Minecraft version.
+    private void warnIfOutdated() {
+        try {
+            com.github.retrooper.packetevents.util.PEVersion installed = PacketEvents.getAPI().getVersion();
+            if (installed.isOlderThan(com.github.retrooper.packetevents.util.PEVersion.fromString(LightningLoader.BUNDLED_VERSION))) {
+                getLogger().warning("The installed PacketEvents " + installed + " is older than " + LightningLoader.BUNDLED_VERSION
+                        + ", which Lightning is tested with. Update it if newer Minecraft versions or dialogs don't work.");
+            }
+        } catch (Throwable ignored) {
+            // Very old PacketEvents builds don't report their version.
+        }
     }
 
     private static boolean classExists(final String name) {

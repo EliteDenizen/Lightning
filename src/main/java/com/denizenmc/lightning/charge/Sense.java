@@ -14,6 +14,8 @@ import java.util.Locale;
 // Checks whether text needs processing without parsing it.
 final class Sense {
 
+    private static final java.util.regex.Pattern NAME = java.util.regex.Pattern.compile("<([A-Za-z0-9_]{3,16})>");
+
     private Sense() {
     }
 
@@ -61,6 +63,30 @@ final class Sense {
             index = serialized.indexOf("\\<", end);
         }
         return false;
+    }
+
+    /**
+     * Keeps player names written like vanilla chat, such as "<Gold> hello", from being read as tags.
+     * MiniMessage ignores case in tag names, so a player called Gold or Bold would otherwise vanish and
+     * recolor the line. Tags in configs are written in lowercase, while a name keeps its capitals, so only
+     * capitalised names of online players are escaped.
+     */
+    static @NotNull String protectNames(@NotNull final String text, @NotNull final TagResolver resolver,
+                                        @NotNull final java.util.function.Predicate<String> online) {
+        if (text.indexOf('<') < 0) return text;
+        java.util.regex.Matcher matcher = NAME.matcher(text);
+        StringBuilder out = null;
+        int at = 0;
+        while (matcher.find()) {
+            String name = matcher.group(1);
+            String lower = name.toLowerCase(Locale.ROOT);
+            if (name.equals(lower) || (matcher.start() > 0 && text.charAt(matcher.start() - 1) == '\\')) continue;
+            if (!resolver.has(lower) || !online.test(name)) continue;
+            if (out == null) out = new StringBuilder(text.length() + 8);
+            out.append(text, at, matcher.start()).append('\\');
+            at = matcher.start();
+        }
+        return out == null ? text : out.append(text, at, text.length()).toString();
     }
 
     static boolean hasPlaceholder(@NotNull final String text) {

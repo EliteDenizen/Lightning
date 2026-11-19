@@ -67,8 +67,26 @@ public final class PlayerWatch implements Listener {
     // Anvil names end up on items and, through name tags, on mobs, both of which Lightning can process.
     @EventHandler(priority = EventPriority.LOWEST)
     public void onRename(@NotNull final PrepareAnvilEvent event) {
-        if (!(event.getView().getPlayer() instanceof Player player) || trusted(player)) return;
-        plugin.guard().remember(event.getView().getRenameText());
+        for (org.bukkit.entity.HumanEntity viewer : event.getInventory().getViewers()) {
+            if (viewer instanceof Player player && !trusted(player)) {
+                plugin.guard().remember(renameText(event));
+                return;
+            }
+        }
+    }
+
+    // AnvilView only exists on newer 1.21 builds; older ones expose the text on the inventory.
+    @SuppressWarnings({"deprecation", "removal"})
+    private static @org.jetbrains.annotations.Nullable String renameText(final PrepareAnvilEvent event) {
+        try {
+            return event.getView().getRenameText();
+        } catch (LinkageError newer) {
+            try {
+                return event.getInventory().getRenameText();
+            } catch (LinkageError older) {
+                return null;
+            }
+        }
     }
 
     // Items aren't processed in creative mode, but the client already holds the processed copies it was sent

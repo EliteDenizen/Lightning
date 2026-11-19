@@ -44,6 +44,10 @@ public final class Guard {
         if (input.indexOf('<') < 0 && input.indexOf('%') < 0) return;
         String text = input.length() > MAX_INPUT ? input.substring(0, MAX_INPUT) : input;
 
+        // Text with no complete tag or placeholder cannot form one on its own. Remembering it anyway would let a
+        // player escape markup they don't control: typing "<click:open_url:" would break every link on the server.
+        if (!TAGS.matcher(text).find() && !PLACEHOLDERS.matcher(text).find()) return;
+
         long expires = System.currentTimeMillis() + plugin.settings().guardMemory();
         prune(System.currentTimeMillis());
         if (visible(text) >= 3) store(text, expires);
@@ -62,6 +66,8 @@ public final class Guard {
         String readable = Sense.unescape(escaped);
         boolean placeholders = input.indexOf('%') >= 0;
         if (readable.equals(escaped) && !placeholders) return;
+        // The same text is kept once, so repeated chat lines or anvil events can't crowd out other memories.
+        memories.removeIf(memory -> memory.readable().equals(readable));
         memories.addLast(new Memory(readable, escaped, placeholders, expires));
         while (memories.size() > LIMIT) memories.pollFirst();
     }

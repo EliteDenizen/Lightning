@@ -98,6 +98,10 @@ public final class Charger {
         // Lightning's own output is already charged and must never be processed twice.
         if (input == null || isOwn(input)) return null;
 
+        // Most packets, such as HUD action bars and tab lists, have no tags at all. Skipping them here avoids
+        // hashing every component and filling the cache with text that would never change.
+        if (plugin.rewires().watching(surface) == 0 && !Sense.worthLooking(input, placeholders)) return null;
+
         // Plugins often resend identical components, so cache their complete results.
         Input key = new Input(surface.safe(), surface.bolts(), input);
         Object answer = known.get(key);
@@ -280,7 +284,7 @@ public final class Charger {
         if (!tagged && !resolvePlaceholders) return new Outcome(null, true);
 
         String unescaped = Sense.unescape(serialized);
-        Guard.Defused defused = plugin.guard().defuse(unescaped);
+        Guard.Defused defused = plugin.guard().defuse(names(unescaped, surface));
 
         Placeholders.takeContained();
         Outcome outcome = restore(
@@ -292,10 +296,17 @@ public final class Charger {
         // as tags again and undo the escaping, so it only runs when nothing was escaped.
         if (!Placeholders.takeContained()) outcome = again(outcome, viewer, surface);
 
-        // Input affected by Guard depends on recent player messages and must not be cached.
+        // Input affected by Guard or by player names depends on who is online and what they typed, so it isn't cached.
         return defused.text().equals(unescaped)
                 ? outcome
                 : new Outcome(outcome.charged(), false);
+    }
+
+    private String names(final String text, final Surface surface) {
+        return Sense.protectNames(text, surface.safe() ? safe : full, name -> {
+            Player player = Bukkit.getPlayerExact(name);
+            return player != null && player.getName().equals(name);
+        });
     }
 
     // A plugin may split MiniMessage tags into text fragments during its own parsing.
@@ -318,7 +329,7 @@ public final class Charger {
         if (!Sense.hasWrittenTag(serialized, surface.safe() ? safe : full)) return first;
 
         Outcome second = restore(
-                parse(plugin.guard().defuse(Sense.unescape(serialized)).text(), viewer, surface, false),
+                parse(plugin.guard().defuse(names(Sense.unescape(serialized), surface)).text(), viewer, surface, false),
                 stash
         );
 

@@ -4,7 +4,15 @@ plugins {
 }
 
 group = "com.denizenmc"
-version = "0.2.2-alpha.4"
+
+// Releases are built with -Prelease and named Lightning-0.2.2.jar.
+// Every other build is a dev build named after its commit, like Lightning-0.2.2+07e2ffa.jar.
+val release = "0.2.2"
+val commit = providers.exec {
+    commandLine("git", "rev-parse", "--short", "HEAD")
+    isIgnoreExitValue = true
+}.standardOutput.asText.map { it.trim() }.getOrElse("")
+version = if (project.hasProperty("release") || commit.isEmpty()) release else "$release+$commit"
 description = "Go beyond simple formatting with universal message customization, reusable components, and fully configurable commands."
 
 java {

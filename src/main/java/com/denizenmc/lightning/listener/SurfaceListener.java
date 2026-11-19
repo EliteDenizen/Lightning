@@ -323,7 +323,7 @@ public final class SurfaceListener extends PacketListenerAbstract {
     }
 
     private void items(final PacketSendEvent event, final Player viewer) {
-        if (!plugin.settings().reaches(Surface.ITEMS)) return;
+        if (!plugin.settings().reaches(Surface.ITEMS) || !plugin.itemsSafe()) return;
         // Creative clients can send items back to the server, potentially saving modified formatting.
         if (viewer != null && viewer.getGameMode() == GameMode.CREATIVE) {
             plugin.debug("Left items unchanged for " + viewer.getName() + " because they're in creative mode.");
@@ -401,12 +401,13 @@ public final class SurfaceListener extends PacketListenerAbstract {
         WrapperPlayServerEntityMetadata packet = new WrapperPlayServerEntityMetadata(event);
         int entity = packet.getEntityId();
         List<EntityData<?>> data = packet.getEntityMetadata();
+        // Metadata packets are among the most frequent, and most carry no text, such as poses and health.
+        if (!hasText(data)) return;
         List<EntityData<?>> result = new ArrayList<>(data.size());
         boolean changed = false;
 
         for (EntityData<?> entry : data) {
             int index = entry.getIndex();
-            String slot = "entity:" + entity + ":" + index;
             Component text = null;
             boolean optional = false;
             if (entry.getType() == EntityDataTypes.ADV_COMPONENT && entry.getValue() instanceof Component value) {
@@ -417,6 +418,7 @@ public final class SurfaceListener extends PacketListenerAbstract {
                 optional = true;
             }
 
+            String slot = text == null ? null : "entity:" + entity + ":" + index;
             Charged charged = text == null ? null : charge(text, viewer, Surface.ENTITIES);
             if (charged == null) {
                 if (text != null) forget(viewer, slot);
@@ -438,6 +440,13 @@ public final class SurfaceListener extends PacketListenerAbstract {
         if (!changed) return;
         packet.setEntityMetadata(result);
         event.markForReEncode(true);
+    }
+
+    private static boolean hasText(final List<EntityData<?>> data) {
+        for (EntityData<?> entry : data) {
+            if (entry.getType() == EntityDataTypes.ADV_COMPONENT || entry.getType() == EntityDataTypes.OPTIONAL_ADV_COMPONENT) return true;
+        }
+        return false;
     }
 
     private void destroyed(final PacketSendEvent event, final Player viewer) {
