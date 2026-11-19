@@ -1,130 +1,35 @@
-# Lightning ⚡
+## Lightning
+[![Paper & Folia](https://tools.denizenmc.com/api/cloud/raw/dNCtFT6Rtt3N.png)](https://papermc.io) [![Java 21](https://tools.denizenmc.com/api/cloud/raw/g8AGSg245TBX.png)](https://docs.papermc.io/misc/java-install) [![Documentation](https://tools.denizenmc.com/api/cloud/raw/wEKeXC9SUNo3.png)](https://hub.denizenmc.com/docs/lightning) [![Discord](https://tools.denizenmc.com/api/cloud/raw/ESwZALwTz4Sp.png)](https://support.denizenmc.com/)
 
-Lightning lets you customize messages across your server, including messages from plugins that were never designed to support MiniMessage. Add gradients, hex colors, reusable text components, interactive messages, and custom commands without modifying individual plugins.
+Lets you use [MiniMessage](https://docs.advntr.dev/minimessage/format) in messages from any plugin, including plugins that only support legacy `&` codes. See our [documentation](https://hub.denizenmc.com/docs/lightning) for more information.
 
-Define reusable styles, create message actions, and build your own command workflows with simple YAML configuration.
+On top of formatting, Lightning adds:
+* **Sparks**: reusable tags for prefixes, colors, placeholders and translations
+* **Bolts**: tags that send titles or action bars, play sounds, or hide a message
+* **Rewires**: restyle hardcoded and vanilla messages where supported
+* **Custom commands**: commands with arguments, cooldowns and permissions, written in YAML
 
-Cook with Lightning.
+Requires Paper or Folia 1.21+ and Java 21. See [here](https://docs.papermc.io/misc/java-install) how to update your installed Java version. [PlaceholderAPI](https://modrinth.com/plugin/placeholderapi) is optional.
 
-![Lightning on ArrowStats](https://arrowstats.org/plugin/21/image.png)
+## Note on processing
+Lightning only touches messages that contain its tags, so commands like `/home <name>` stay as they are. Player input is always treated as plain text, never as formatting.
 
-## Features
-
-### Universal MiniMessage Support
-Use MiniMessage formatting in supported messages from virtually any plugin, including those limited to legacy color codes. Add gradients, hex colors, hover events, and click actions without editing each plugin individually.
-
-### Server-Wide Message Customization
-Customize chat, action bars, titles, boss bars, tab lists, scoreboards, menus, items, holograms, dialogs, kick and ban screens, and server list messages.
-
-### Smart Tag Detection
-Lightning processes messages containing supported tags while leaving ordinary text untouched. Commands such as `/home <name>` remain intact.
-
-### Sparks: Reusable Text Components
-Create custom tags for prefixes, color schemes, formatted placeholders, dynamic values, rotating tips, and localized messages. Define them once and reuse them throughout your server.
-
-### Bolts: Message Actions
-Go beyond formatting with tags that trigger actions, including action bar messages, titles, sounds, and message suppression.
-
-### Player Head Integration
-Use the `<face>` tag to display a player's own head directly in supported text components. Requires Minecraft 1.21.9 or newer.
-
-### Rewires: Override Existing Messages
-Restyle messages you cannot easily edit through a plugin's configuration, including vanilla server screens and hardcoded plugin messages where supported.
-
-### Custom Commands
-Create your own commands using YAML. Configure arguments, tab completion, subcommands, cooldowns, execution limits, and configurable actions.
-
-### Built-In Configuration Tools
-Trace messages back to their source, identify broken tags across plugin configurations, convert legacy `&` color codes to MiniMessage with automatic backups, and inspect how messages are processed.
-
-### Safe and Lightweight
-Player-supplied text remains plain text rather than being interpreted as formatting instructions. Ordinary messages avoid unnecessary processing, and reusable results are cached to reduce overhead.
-
-## Requirements
-
-- Paper or Folia 1.21 or newer
-- Java 21
-- PlaceholderAPI (optional)
-
-## Installation
-
-1. Download the Lightning JAR.
-2. Place it in your server's `plugins/` folder.
-3. Restart your server.
-
-## PacketEvents
-
-Lightning requires PacketEvents for packet handling.
-- PacketEvents already installed: Lightning uses the installed PacketEvents plugin.
-- PacketEvents not installed: Lightning automatically downloads PacketEvents 2.14.0 on startup.
-
-If PacketEvents is already installed, ensure its version supports your Minecraft server version.
-
-## Configuration Examples
-
-### MiniMessage in Any Plugin's Configuration
-
-With Lightning installed, supported messages in other plugins' configurations can use MiniMessage formatting.
-
+## Usage
+Once Lightning is installed, MiniMessage works in other plugins' configs:
 ```yaml
 welcome: "<gradient:#FFE259:#FFA751>Welcome back, %player_name%!</gradient>"
 home-set: "<actionbar><green>Home set.<sound:entity.player.levelup>"
-balance: "<spark:prefix> You have <spark:balance>"
 ```
 
-### Reusable Sparks
-
-Define reusable text components in `plugins/Lightning/sparks/` and use them throughout your configurations.
-
-```yaml
-balance: "<spark:prefix> You have <spark:balance>"
-```
-
-### Custom Commands
-
-Define your own commands, arguments, and actions through YAML configuration.
-
-```yaml
-discord:
-  description: Get the Discord link
-  actions:
-    - "<spark:prefix> Join us at discord.gg/example"
-```
-
-## Commands
-
-| Command | Description |
-|---|---|
-| `/lightning reload` | Reload Lightning's configuration and resources. |
-| `/lightning parse [surface] <text>` | Preview how text will be processed. |
-| `/lightning sparks` | List available sparks. |
-| `/lightning inspect [chat\|actionbar]` | Trace messages back to their source. |
-| `/lightning check [plugin]` | Find unsupported or incorrectly written tags. |
-| `/lightning convert <plugin>` | Convert legacy `&` color codes to MiniMessage, creating a backup. |
-| `/lightning debug` | Show why Lightning processes or skips messages in the console. |
-
-All commands require `lightning.admin`. You can also use `/lt`.
-
-## Documentation
-
-Read the full guide at [hub.denizenmc.com/docs/lightning](https://hub.denizenmc.com/docs/lightning).
-
-## Building
-
-Run `./gradlew build`. The compiled JAR will be available in `build/libs/`.
-
-Dependencies are not shaded into the JAR. Paper's plugin loader handles PacketEvents at runtime.
+## Releases
+You can find official releases in the following places:
+* Modrinth: https://modrinth.com/plugin/lightning-was-taken
+* GitHub: https://github.com/EliteDenizen/Lightning
+* DenizenMC: https://denizenmc.com/store/lightning
 
 ## Support
+Questions and bug reports go to our [Discord server](https://support.denizenmc.com/).
 
-Need help, found a bug, or have a feature request?
-
-- [Documentation](https://hub.denizenmc.com/docs/lightning)
-- [Support Discord](https://support.denizenmc.com)
-- [Report a bug or request a feature](https://github.com/EliteDenizen/Lightning/issues/new/choose)
-
-Want to help out? Read the [contributing guide](CONTRIBUTING.md). If Lightning has made your server better, you can also [support it on Ko-fi](https://ko-fi.com/elitedenizen).
-
-## License
-
-Lightning is licensed under **GPL-3.0-or-later**. See [LICENSE](LICENSE) for details.
+## Statistics
+Lightning collects anonymous statistics through Arrow Stats, an open-source statistics service. You can opt out in `plugins/Arrow Stats/config.yml`.
+[![View Lightning statistics on Arrow Stats](https://arrowstats.org/plugin/21/image.png)](https://arrowstats.org/plugin/21)
